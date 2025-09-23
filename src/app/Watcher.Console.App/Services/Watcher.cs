@@ -10,6 +10,7 @@ public class Watcher : IDisposable
     private readonly IFileSystemService _fileSystemService;
     private readonly IConsoleLogger _logger;
     private readonly string _rootPath;
+    private readonly HashSet<string> _allowedExtensions;
 
     public event FileSystemEventHandler? Changed;
     public event RenamedEventHandler? Renamed;
@@ -23,12 +24,13 @@ public class Watcher : IDisposable
     public long TotalSizeBytes { get; private set; }
 
     public Watcher(
-        string path, 
+        string path,
         IFileSystemWatcherFactory watcherFactory,
         IFileSystemService fileSystemService,
         IConsoleLogger logger,
-        string filter = "*.*", 
-        bool includeSubdirectories = true)
+        string filter = "*.*",
+        bool includeSubdirectories = true,
+        string[]? allowedExtensions = null)
     {
         _fileSystemService = fileSystemService ?? throw new ArgumentNullException(nameof(fileSystemService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -37,6 +39,25 @@ public class Watcher : IDisposable
             throw new DirectoryNotFoundException($"The folder '{path}' does not exist.");
 
         _rootPath = path;
+
+        // Initialize allowed extensions - default to common media/image files
+        _allowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (allowedExtensions != null && allowedExtensions.Length > 0)
+        {
+            foreach (var ext in allowedExtensions)
+            {
+                _allowedExtensions.Add(ext.StartsWith(".") ? ext : $".{ext}");
+            }
+        }
+        else
+        {
+            // Default extensions: .mkv, .mov, .png, .jpeg, .jpg
+            _allowedExtensions.Add(".mkv");
+            _allowedExtensions.Add(".mov");
+            _allowedExtensions.Add(".png");
+            _allowedExtensions.Add(".jpeg");
+            _allowedExtensions.Add(".jpg");
+        }
 
         _watcher = watcherFactory.Create(path, filter);
         _watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite;
@@ -50,16 +71,22 @@ public class Watcher : IDisposable
     }
 
     // Convenience constructor for production use
-    public Watcher(string path, string filter = "*.*", bool includeSubdirectories = true)
-        : this(path, new FileSystemWatcherFactory(), new FileSystemService(), new ConsoleLogger(), filter, includeSubdirectories)
+    public Watcher(string path, string filter = "*.*", bool includeSubdirectories = true, string[]? allowedExtensions = null)
+        : this(path, new FileSystemWatcherFactory(), new FileSystemService(), new ConsoleLogger(), filter, includeSubdirectories, allowedExtensions)
     {
+    }
+
+    private bool IsAllowedFile(string filePath)
+    {
+        var extension = Path.GetExtension(filePath);
+        return _allowedExtensions.Contains(extension);
     }
 
     private void OnFileCreated(object? sender, FileSystemEventArgs e)
     {
         Changed?.Invoke(sender, e);
 
-        if (_fileSystemService.FileExists(e.FullPath))
+        if (_fileSystemService.FileExists(e.FullPath) && IsAllowedFile(e.FullPath))
         {
             try
             {
@@ -91,14 +118,15 @@ public class Watcher : IDisposable
         {
             var rootDir = _fileSystemService.GetDirectoryInfo(_rootPath);
 
-            Files = _fileSystemService.GetFiles(_rootPath, "*", SearchOption.AllDirectories).ToList();
+            var allFiles = _fileSystemService.GetFiles(_rootPath, "*", SearchOption.AllDirectories);
+            Files = allFiles.Where(f => IsAllowedFile(f.FullName)).ToList();
             Directories = _fileSystemService.GetDirectories(_rootPath, "*", SearchOption.AllDirectories).ToList();
 
             TotalFileCount = Files.Count;
             TotalDirectoryCount = Directories.Count;
             TotalSizeBytes = Files.Sum(f => f.Length);
 
-            _logger.WriteLine($"Initial scan completed:");
+            _logger.WriteLine($"Initial scan completed (filtered for: {string.Join(", ", _allowedExtensions)}):");
             _logger.WriteLine($"  - Total files: {TotalFileCount}");
             _logger.WriteLine($"  - Total directories: {TotalDirectoryCount}");
             _logger.WriteLine($"  - Total size: {FormatBytes(TotalSizeBytes)}");
@@ -134,6 +162,7 @@ public class Watcher : IDisposable
     public void PrintSummary()
     {
         _logger.WriteLine($"\nFolder Summary for: {_rootPath}");
+        _logger.WriteLine($"Filtered Extensions: {string.Join(", ", _allowedExtensions)}");
         _logger.WriteLine($"Files: {TotalFileCount}");
         _logger.WriteLine($"Directories: {TotalDirectoryCount}");
         _logger.WriteLine($"Total Size: {FormatBytes(TotalSizeBytes)}");
@@ -161,6 +190,7 @@ public class Watcher : IDisposable
         try
         {
             return _fileSystemService.GetFiles(dirPath, "*", SearchOption.AllDirectories)
+                .Where(f => IsAllowedFile(f.FullName))
                 .Sum(f => f.Length);
         }
         catch

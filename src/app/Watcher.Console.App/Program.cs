@@ -2,10 +2,13 @@
 
 using Watcher.Console.App.Services;
 
+string title = "Hive Folder Watcher";
+Console.Title = title;
+
 
 //write the app version and name
 var appVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-Console.WriteLine($"Watcher.Console.App v{appVersion}");
+Console.WriteLine($"{title} v{appVersion}");
 
 WatcherArguments watcherArgs;
 try
@@ -20,6 +23,12 @@ catch (Exception ex)
 
 if (watcherArgs.ShowHelp)
 {
+    //write possible arguments
+    Console.WriteLine($"{title} - A simple file system watcher.");
+    Console.WriteLine("Options:");
+    Console.WriteLine("  --watch or -w <folder_to_watch>   Specifies the folder to watch.");
+    Console.WriteLine("  --help                      Displays this help message.");
+    Console.WriteLine();
     Console.WriteLine("Usage: Watcher.Console.App --watch <folder_to_watch>");
     return;
 }
@@ -27,6 +36,7 @@ if (watcherArgs.ShowHelp)
 
 Console.WriteLine($"Watching folder: {watcherArgs.FolderToWatch}");
 Console.WriteLine("Press 'q' to quit or Ctrl+C to exit.");
+Console.WriteLine();
 
 using var watcher = new Watcher.Console.App.Services.Watcher(watcherArgs.FolderToWatch);
 watcher.Changed += (s, e) =>
