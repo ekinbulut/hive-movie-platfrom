@@ -1,5 +1,8 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using System.Text.Json.Serialization.Metadata;
+using Newtonsoft.Json;
+using Watcher.Console.App.Events;
 using Watcher.Console.App.Services;
 
 string title = "Hive Folder Watcher";
@@ -46,7 +49,16 @@ watcher.Renamed += (s, e) =>
 watcher.Error += (s, e) =>
     Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Error: {e.GetException().Message}");
 watcher.FileContentDiscovered += (s, e) =>
+{
     Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] File Discovered: {e.Path} (Size: {e.Size} bytes)");
+
+    var fileEvent = new FileFoundEvent
+    {
+        FilePaths = new List<string> { e.Path },
+        Meta = JsonConvert.SerializeObject(new { Size = e.Size, Name = e.Name, Extension = e.Extension  })
+    };
+};
+   
 
 watcher.PerformInitialScan();
 
@@ -70,7 +82,6 @@ while (true)
         break;
     }
 }
-
 
 
 

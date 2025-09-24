@@ -1,6 +1,6 @@
 using Domain.Entities;
 
-namespace Infrastructure;
+namespace Domain.Interfaces;
 
 public interface IMovieRepository
 {

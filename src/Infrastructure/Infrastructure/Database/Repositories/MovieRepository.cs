@@ -1,7 +1,8 @@
 using Domain.Entities;
-using Infrastructure.Context;
+using Domain.Interfaces;
+using Infrastructure.Database.Context;
 
-namespace Infrastructure;
+namespace Infrastructure.Database.Repositories;
 
 public class MovieRepository : IMovieRepository
 {

@@ -1,5 +1,6 @@
 ﻿using Domain.Entities;
-using Infrastructure.Context;
+using Infrastructure.Database.Context;
+using Infrastructure.Database.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 
