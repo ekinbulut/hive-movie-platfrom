@@ -11,6 +11,7 @@
 using System.Globalization;
 using System.Text.Json.Serialization.Metadata;
 using Domain.Abstraction;
+using Infrastructure.Database.Extensions;
 using Infrastructure.Messaging.Contracts;
 using Infrastructure.Messaging.Extensions;
 using Infrastructure.Messaging.Handlers;
@@ -22,6 +23,7 @@ using Newtonsoft.Json;
 using Rebus.Config;
 using Watcher.Console.App.Events;
 using Watcher.Console.App.Handlers;
+using Watcher.Console.App.Models;
 using Watcher.Console.App.Services;
 
 string title = "Hive Folder Watcher";
@@ -55,7 +57,9 @@ var builder = Host.CreateDefaultBuilder(args)
         var inputQueue = "hive-watcher";
         services.AutoRegisterHandlersFromAssemblyOf<MessageHandler>();
 
-        services.AddMessaging(rabbitConn, inputQueue, 0);
+        services.AddMessaging(rabbitConn, inputQueue, 1);
+        
+        services.AddDbContext(ctx.Configuration);
     });
 
 using var host = builder.Build();
@@ -114,13 +118,7 @@ watcher.FileContentDiscovered += (s, e) =>
     var fileEvent = new FileFoundEvent
     {
         FilePaths = new List<string> { e.Path },
-        Meta = JsonConvert.SerializeObject(new { Size = e.Size, Name = e.Name, Extension = e.Extension  }, new JsonSerializerSettings()
-        {
-            Culture = CultureInfo.InvariantCulture,
-            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-            StringEscapeHandling = StringEscapeHandling.Default,
-            Formatting = Formatting.Indented
-        }),
+        MetaData = new MetaData(e.Name, e.Size, e.Extension),
         CausationId = defaultCorrelationId
     };
 

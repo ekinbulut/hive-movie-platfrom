@@ -9,7 +9,7 @@ namespace Infrastructure.Database.Extensions;
 
 public static partial class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddMediator(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddDbContext(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<IMovieRepository, MovieRepository>();
         

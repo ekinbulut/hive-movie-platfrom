@@ -1,6 +1,8 @@
 using Domain.Abstraction;
 using Infrastructure.Messaging.Contracts;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Watcher.Console.App.Models;
 
 namespace Watcher.Console.App.Events;
 
@@ -13,4 +15,6 @@ public class FileFoundEvent : BaseEvent, IMessage
         FilePaths = new List<string>();
     }
     public string? CausationId { get; init; }
+
+    public MetaData MetaData { get; set; }
 }
