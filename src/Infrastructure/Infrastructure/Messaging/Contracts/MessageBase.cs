@@ -7,5 +7,5 @@ public record MessageBase(
 ) : IMessage
 {
     public static MessageBase New(string? correlationId = null, string? causationId = null)
-        => new(correlationId ?? Guid.NewGuid().ToString("N"), causationId, DateTimeOffset.UtcNow);
+        => new(correlationId ?? Guid.CreateVersion7().ToString("N"), causationId, DateTimeOffset.UtcNow);
 }

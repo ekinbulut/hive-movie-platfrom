@@ -9,16 +9,7 @@ namespace Infrastructure.Messaging.Configuration;
 
 public static class RebusConfiguration
 {
-    public static void ConfigureRebus(this IServiceCollection services, string connectionString, string inputQueue)
-    {
-        services.AddRebus(configure => configure
-            .Logging(l => l.ColoredConsole())
-            .Transport(t => t.UseRabbitMq(connectionString, inputQueue))
-            .Options(o => o.SetNumberOfWorkers(1))
-        );
-    }
-    
-    public static void ConfigureRebusRabbit(
+    public static void ConfigureRebus(
         this IServiceCollection services,
         string amqpConnectionString,
         string inputQueue,

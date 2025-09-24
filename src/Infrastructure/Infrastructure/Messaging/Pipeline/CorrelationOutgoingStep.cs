@@ -20,7 +20,7 @@ public class CorrelationOutgoingStep : IOutgoingStep
 
         if (!headers.ContainsKey(RebusHeaders.CorrelationId))
         {
-            headers[RebusHeaders.CorrelationId] = Guid.NewGuid().ToString("N");
+            headers[RebusHeaders.CorrelationId] = Guid.CreateVersion7().ToString("N");
         }
 
         var current = MessageContext.Current;

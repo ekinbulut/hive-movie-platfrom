@@ -1,6 +1,11 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using System.Text.Json.Serialization.Metadata;
+using Infrastructure.Messaging.Extensions;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Watcher.Console.App.Events;
 using Watcher.Console.App.Services;
@@ -8,10 +13,38 @@ using Watcher.Console.App.Services;
 string title = "Hive Folder Watcher";
 Console.Title = title;
 
-
 //write the app version and name
 var appVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
 Console.WriteLine($"{title} v{appVersion}");
+
+// --- Host/DI bootstrap -------------------------------------------------------
+var builder = Host.CreateDefaultBuilder(args)
+    .ConfigureLogging(logging =>
+    {
+        logging.ClearProviders();
+        logging.AddSimpleConsole(o =>
+        {
+            o.TimestampFormat = "[yyyy-MM-dd HH:mm:ss] ";
+            o.SingleLine = true;
+        });
+    })
+    .ConfigureServices((ctx, services) =>
+    {
+        // RabbitMQ connection
+        // Prefer appsettings.json: ConnectionStrings:RabbitMq
+        // Fallback to env var RABBITMQ__CONNECTION, then default localhost
+        var rabbitConn =
+            ctx.Configuration.GetConnectionString("RabbitMq")
+            ?? Environment.GetEnvironmentVariable("RABBITMQ__CONNECTION")
+            ?? "amqp://guest:guest@localhost:5672";
+
+        var inputQueue = "hive-watcher";
+        services.AddMessaging(rabbitConn, inputQueue, 0);
+
+    });
+
+using var host = builder.Build();
+await host.StartAsync();
 
 WatcherArguments watcherArgs;
 try
@@ -36,10 +69,18 @@ if (watcherArgs.ShowHelp)
     return;
 }
 
+Console.WriteLine();
 
 Console.WriteLine($"Watching folder: {watcherArgs.FolderToWatch}");
 Console.WriteLine("Press 'q' to quit or Ctrl+C to exit.");
 Console.WriteLine();
+
+// Resolve Rebus bus through DI
+var bus = host.Services.GetRequiredService<Rebus.Bus.IBus>();
+await bus.Subscribe<FileFoundEvent>();
+
+// --- Define a lightweight publish DTO that implements your abstraction -------
+var defaultCorrelationId = Guid.NewGuid().ToString("N");
 
 using var watcher = new Watcher.Console.App.Services.Watcher(watcherArgs.FolderToWatch);
 watcher.Changed += (s, e) =>
@@ -52,11 +93,15 @@ watcher.FileContentDiscovered += (s, e) =>
 {
     Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] File Discovered: {e.Path} (Size: {e.Size} bytes)");
 
+    
     var fileEvent = new FileFoundEvent
     {
         FilePaths = new List<string> { e.Path },
-        Meta = JsonConvert.SerializeObject(new { Size = e.Size, Name = e.Name, Extension = e.Extension  })
+        Meta = JsonConvert.SerializeObject(new { Size = e.Size, Name = e.Name, Extension = e.Extension  }),
+        CausationId = defaultCorrelationId
     };
+
+    bus.Publish(fileEvent);
 };
    
 
@@ -83,5 +128,6 @@ while (true)
     }
 }
 
-
+// Stop Rebus/Host when loop exits
+await host.StopAsync();
 

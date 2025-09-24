@@ -32,7 +32,6 @@ public abstract class BaseMessageHandler<TMessage> : IHandleMessages<TMessage>
     public async Task Handle(TMessage message)
     {
         var headers = MessageContext.Headers;
-        var correlationId = headers.TryGetValue(RebusHeaders.CorrelationId, out var c) ? c : message.CorrelationId ?? Guid.NewGuid().ToString("N");
         var causationId   = headers.TryGetValue(RebusHeaders.CausationId, out var cs) ? cs : message.CausationId;
 
         var sourceQueue = MessageContext.Headers.TryGetValue(Headers.ReturnAddress, out var from)
@@ -43,30 +42,29 @@ public abstract class BaseMessageHandler<TMessage> : IHandleMessages<TMessage>
             .AddTag("messaging.system", "rebus")
             .AddTag("messaging.destination", sourceQueue)
             .AddTag("messaging.operation", "process")
-            .AddTag("correlation_id", correlationId ?? string.Empty)
             .AddTag("causation_id", causationId ?? string.Empty);
 
         activity.Start();
 
         var sw = Stopwatch.StartNew();
         _logger.LogInformation("▶️ Handling {MessageType} CorrelationId={CorrelationId} CausationId={CausationId}",
-            typeof(TMessage).Name, correlationId, causationId);
+            typeof(TMessage).Name, causationId);
 
         try
         {
             // Optional idempotency gate: override to implement store check
             if (await IsDuplicateAsync(message, headers))
             {
-                _logger.LogWarning("⏭️ Skipping duplicate {MessageType} CorrelationId={CorrelationId}", typeof(TMessage).Name, correlationId);
+                _logger.LogWarning("⏭️ Skipping duplicate {MessageType} CorrelationId={CorrelationId}", typeof(TMessage).Name, causationId);
                 return;
             }
 
-            await OnHandle(message, correlationId, causationId);
+            await OnHandle(message, causationId);
             _logger.LogInformation("✅ Handled {MessageType} in {Elapsed} ms", typeof(TMessage).Name, sw.ElapsedMilliseconds);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Error while handling {MessageType} CorrelationId={CorrelationId}", typeof(TMessage).Name, correlationId);
+            _logger.LogError(ex, "❌ Error while handling {MessageType} CorrelationId={CorrelationId}", typeof(TMessage).Name, causationId);
             throw; // let Rebus retry policies kick in
         }
         finally
@@ -86,5 +84,5 @@ public abstract class BaseMessageHandler<TMessage> : IHandleMessages<TMessage>
     /// <summary>
     /// Your actual handling logic lives here.
     /// </summary>
-    protected abstract Task OnHandle(TMessage message, string? correlationId, string? causationId);
+    protected abstract Task OnHandle(TMessage message, string? causationId);
 }
