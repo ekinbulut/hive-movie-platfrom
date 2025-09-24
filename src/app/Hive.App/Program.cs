@@ -2,6 +2,7 @@ using FastEndpoints;
 using Features.Extensions;
 using Infrastructure.Database.Extensions;
 using Microsoft.AspNetCore.Authentication.Negotiate;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,7 +18,7 @@ builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization(options =>
 {
     // By default, all incoming requests will be authorized according to the default policy.
-    options.FallbackPolicy = options.DefaultPolicy;
+    // options.FallbackPolicy = options.DefaultPolicy;
 });
 
 builder.Services.AddFastApiRoutes();
@@ -30,6 +31,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
@@ -38,6 +40,9 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.UseFastEndpoints();
+app.UseFastEndpoints(config =>
+{
+    config.Endpoints.RoutePrefix = "v1/api";
+});
 
 app.Run();

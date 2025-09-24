@@ -1,5 +1,6 @@
 using Domain.Interfaces;
 using FastEndpoints;
+using Features.Extensions;
 
 namespace Features.GetAllMovies;
 
@@ -7,13 +8,12 @@ public class GetAllMoviesEndpoint(IMovieRepository movieRepository) : Endpoint<G
 {
     public override void Configure()
     {
-        Post("v1/api/movies"); // TODO: define v1/api prefix in a constant
+        Post("/movies");
         AllowAnonymous();
     }
 
     public override async Task HandleAsync(GetMoviesRequest req, CancellationToken ct)
     {
-        
         var movies = movieRepository.GetAllMovies(req.pageNumber, req.pageSize);
         
         await Send.OkAsync(new GetMovieResponse()
@@ -22,9 +22,14 @@ public class GetAllMoviesEndpoint(IMovieRepository movieRepository) : Endpoint<G
             {
                 Id = m.Id,
                 Name = m.Name,
+                FilePath = m.FilePath,
+                SubTitleFilePath = m.SubTitleFilePath,
+                FileSize = m.FileSize.ToHumanReadableSize(),
+                Image = m.Image
+                
             }).ToList(),
             PageSize = req.pageSize,
             PageNumber = req.pageNumber,
-        });
+        }, ct);
     }
 }

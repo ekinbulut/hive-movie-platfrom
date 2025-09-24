@@ -8,13 +8,7 @@ public class MovieDTO
 
     public string? FilePath { get; set; }
 
-    public DateTime? CreatedTime { get; set; }
-
-    public DateTime? ModifiedTime { get; set; }
-
-    public bool? IsActive { get; set; }
-
-    public long? FileSize { get; set; }
+    public string? FileSize { get; set; }
 
     public string? SubTitleFilePath { get; set; }
 
