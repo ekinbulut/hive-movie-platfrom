@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using Infrastructure.Messaging.Constants;
 using Infrastructure.Messaging.Contracts;
-using Microsoft.Extensions.Logging;
 using Rebus.Handlers;
 using Rebus.Messages;
 using Rebus.Pipeline;
@@ -18,12 +17,6 @@ namespace Infrastructure.Messaging.Handlers;
 public abstract class BaseMessageHandler<TMessage> : IHandleMessages<TMessage>
     where TMessage : class, IMessage
 {
-    private readonly ILogger _logger;
-
-    protected BaseMessageHandler(ILogger logger)
-    {
-        _logger = logger;
-    }
 
     // Access to raw Rebus context if needed in derived classes
     protected IMessageContext MessageContext => Rebus.Pipeline.MessageContext.Current 
@@ -47,24 +40,20 @@ public abstract class BaseMessageHandler<TMessage> : IHandleMessages<TMessage>
         activity.Start();
 
         var sw = Stopwatch.StartNew();
-        _logger.LogInformation("▶️ Handling {MessageType} CorrelationId={CorrelationId} CausationId={CausationId}",
-            typeof(TMessage).Name, causationId);
+
 
         try
         {
             // Optional idempotency gate: override to implement store check
             if (await IsDuplicateAsync(message, headers))
             {
-                _logger.LogWarning("⏭️ Skipping duplicate {MessageType} CorrelationId={CorrelationId}", typeof(TMessage).Name, causationId);
                 return;
             }
 
             await OnHandle(message, causationId);
-            _logger.LogInformation("✅ Handled {MessageType} in {Elapsed} ms", typeof(TMessage).Name, sw.ElapsedMilliseconds);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Error while handling {MessageType} CorrelationId={CorrelationId}", typeof(TMessage).Name, causationId);
             throw; // let Rebus retry policies kick in
         }
         finally

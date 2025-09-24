@@ -1,13 +1,24 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+/*
+ * Date: 2025-09-24
+ * Description: A simple console app that watches a folder for new files and publishes events to RabbitMQ using Rebus.
+ *
+ * Written by: ChatGPT-4.0 Copilot
+ * Reviewed by: Ekin BULUT
+ */
+
 using System.Text.Json.Serialization.Metadata;
 using Infrastructure.Messaging.Extensions;
+using Infrastructure.Messaging.Handlers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Rebus.Config;
 using Watcher.Console.App.Events;
+using Watcher.Console.App.Handlers;
 using Watcher.Console.App.Services;
 
 string title = "Hive Folder Watcher";
@@ -39,8 +50,9 @@ var builder = Host.CreateDefaultBuilder(args)
             ?? "amqp://guest:guest@localhost:5672";
 
         var inputQueue = "hive-watcher";
-        services.AddMessaging(rabbitConn, inputQueue, 0);
+        services.AutoRegisterHandlersFromAssemblyOf<MessageHandler>();
 
+        services.AddMessaging(rabbitConn, inputQueue, 1);
     });
 
 using var host = builder.Build();
@@ -93,7 +105,7 @@ watcher.FileContentDiscovered += (s, e) =>
 {
     Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] File Discovered: {e.Path} (Size: {e.Size} bytes)");
 
-    
+    // THIS IS OVER ENGINEERING !!
     var fileEvent = new FileFoundEvent
     {
         FilePaths = new List<string> { e.Path },
