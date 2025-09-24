@@ -10,4 +10,8 @@
       <PackageReference Include="FastEndpoints" Version="7.0.1" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\..\Infrastructure\Infrastructure\Infrastructure.csproj" />
+    </ItemGroup>
+
 </Project>

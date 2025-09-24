@@ -1,3 +1,6 @@
+using FastEndpoints;
+using Features.Extensions;
+using Infrastructure.Database.Extensions;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +20,10 @@ builder.Services.AddAuthorization(options =>
     options.FallbackPolicy = options.DefaultPolicy;
 });
 
+builder.Services.AddFastApiRoutes();
+
+builder.Services.AddDbContext(builder.Configuration);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -30,5 +37,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseFastEndpoints();
 
 app.Run();

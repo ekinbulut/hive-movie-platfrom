@@ -1,6 +1,9 @@
 @Hive.App_HostAddress = http://localhost:5154
 
-GET {{Hive.App_HostAddress}}/weatherforecast/
-Accept: application/json
+POST {{Hive.App_HostAddress}}/v1/api/movies
+Content-Type: application/json
 
-###
+{
+  "pageSize": 15,
+  "pageNumber": 1
+}
