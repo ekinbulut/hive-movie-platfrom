@@ -8,7 +8,10 @@
  * Reviewed by: Ekin BULUT
  */
 
+using System.Globalization;
 using System.Text.Json.Serialization.Metadata;
+using Domain.Abstraction;
+using Infrastructure.Messaging.Contracts;
 using Infrastructure.Messaging.Extensions;
 using Infrastructure.Messaging.Handlers;
 using Microsoft.Extensions.Configuration;
@@ -52,7 +55,7 @@ var builder = Host.CreateDefaultBuilder(args)
         var inputQueue = "hive-watcher";
         services.AutoRegisterHandlersFromAssemblyOf<MessageHandler>();
 
-        services.AddMessaging(rabbitConn, inputQueue, 1);
+        services.AddMessaging(rabbitConn, inputQueue, 0);
     });
 
 using var host = builder.Build();
@@ -94,6 +97,8 @@ await bus.Subscribe<FileFoundEvent>();
 // --- Define a lightweight publish DTO that implements your abstraction -------
 var defaultCorrelationId = Guid.NewGuid().ToString("N");
 
+var events = new List<FileFoundEvent>();
+
 using var watcher = new Watcher.Console.App.Services.Watcher(watcherArgs.FolderToWatch);
 watcher.Changed += (s, e) =>
     Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {e.ChangeType}: {e.FullPath}");
@@ -109,7 +114,13 @@ watcher.FileContentDiscovered += (s, e) =>
     var fileEvent = new FileFoundEvent
     {
         FilePaths = new List<string> { e.Path },
-        Meta = JsonConvert.SerializeObject(new { Size = e.Size, Name = e.Name, Extension = e.Extension  }),
+        Meta = JsonConvert.SerializeObject(new { Size = e.Size, Name = e.Name, Extension = e.Extension  }, new JsonSerializerSettings()
+        {
+            Culture = CultureInfo.InvariantCulture,
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+            StringEscapeHandling = StringEscapeHandling.Default,
+            Formatting = Formatting.Indented
+        }),
         CausationId = defaultCorrelationId
     };
 

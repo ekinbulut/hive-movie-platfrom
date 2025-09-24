@@ -54,9 +54,9 @@ public class Watcher : IDisposable
             // Default extensions: .mkv, .mov, .png, .jpeg, .jpg
             _allowedExtensions.Add(".mkv");
             _allowedExtensions.Add(".mov");
-            _allowedExtensions.Add(".png");
-            _allowedExtensions.Add(".jpeg");
-            _allowedExtensions.Add(".jpg");
+            // _allowedExtensions.Add(".png");
+            // _allowedExtensions.Add(".jpeg");
+            // _allowedExtensions.Add(".jpg");
         }
 
         _watcher = watcherFactory.Create(path, filter);
