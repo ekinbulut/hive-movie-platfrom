@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Net;
 
-namespace Hive.Idm.Infrastructure.Models.Hive.Idm.Api.Models;
+namespace Domain.Entities;
 
 [Table("audit_logs")]
 public class AuditLog

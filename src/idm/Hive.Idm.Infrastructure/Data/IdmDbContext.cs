@@ -1,5 +1,4 @@
-using Hive.Idm.Infrastructure.Models;
-using Hive.Idm.Infrastructure.Models.Hive.Idm.Api.Models;
+using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Hive.Idm.Infrastructure.Data;

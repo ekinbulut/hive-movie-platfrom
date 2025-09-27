@@ -1,6 +1,7 @@
 using System.Text;
 using FastEndpoints;
 using Hive.Idm.Infrastructure.Data;
+using Hive.Idm.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -11,8 +12,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 // Add Entity Framework
-builder.Services.AddDbContext<IdmDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddDbContextInfra(builder.Configuration);
+
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();

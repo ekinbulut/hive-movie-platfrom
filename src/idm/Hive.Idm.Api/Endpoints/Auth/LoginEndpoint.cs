@@ -3,6 +3,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Common.Crypto;
+using Domain.Interfaces;
 
 namespace Hive.Idm.Api.Endpoints.Auth;
 
@@ -21,6 +23,12 @@ public class LoginResponse
 
 public class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
 {
+    IUserRepository _userRepository;
+    public LoginEndpoint(IUserRepository userRepository)
+    {
+        _userRepository = userRepository;
+    }
+    
     public override void Configure()
     {
         Post("/auth/login");
@@ -54,8 +62,24 @@ public class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
 
     private bool IsValidUser(string username, string password)
     {
+        var exists = _userRepository.UsernameExistsAsync(username)
+            .ConfigureAwait(false)
+            .GetAwaiter()
+            .GetResult();
         // Mock validation - replace with actual user validation
-        return username == "admin" && password == "password";
+
+        if (!exists)
+        {
+            return false;
+        }
+        
+        var user = _userRepository.GetByUsernameAsync(username)
+            .ConfigureAwait(false)
+            .GetAwaiter()
+            .GetResult();
+        
+        
+        return HashHelper.ComputeSha256Hash(password) == user.PasswordHash;
     }
 
     private string GenerateJwtToken(string username)

@@ -1,8 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Hive.Idm.Infrastructure.Models.Hive.Idm.Api.Models;
 
-namespace Hive.Idm.Infrastructure.Models;
+namespace Domain.Entities;
 
 [Table("users")]
 public class User

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Hive.Idm.Infrastructure.Models;
+namespace Domain.Entities;
 
 [Table("refresh_tokens")]
 public class RefreshToken
