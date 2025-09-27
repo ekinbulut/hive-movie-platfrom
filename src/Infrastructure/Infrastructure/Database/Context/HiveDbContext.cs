@@ -16,16 +16,21 @@ public partial class HiveDbContext : DbContext
     {
         modelBuilder.Entity<Movie>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("movies_id_pk");
+            entity.HasKey(e => e.Id).HasName("movies_pk_id");
 
             entity.ToTable("movies");
 
-            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Id)
+                .HasDefaultValueSql("gen_random_uuid()")
+                .HasColumnName("id");
             entity.Property(e => e.CreatedTime).HasColumnName("created_time");
             entity.Property(e => e.FilePath)
                 .HasColumnType("character varying")
                 .HasColumnName("file_path");
             entity.Property(e => e.FileSize).HasColumnName("file_size");
+            entity.Property(e => e.HashValue)
+                .HasColumnType("character varying")
+                .HasColumnName("hash_value");
             entity.Property(e => e.Image)
                 .HasColumnType("character varying")
                 .HasColumnName("image");

@@ -20,10 +20,16 @@ public class MovieRepository : IMovieRepository
     }
     
     // Add a method to get a movie by id
-    public Movie GetMovieById(int id)
+    public Movie? GetMovieById(Guid id)
     {
         return _context.Movies.FirstOrDefault(m => m.Id == id);
     }
+
+    public bool GetMovieByHashValue(string name)
+    {
+       return _context.Movies.FirstOrDefault(m => m.HashValue == name) != null;
+    }
+
     // Add a method to add a movie
     public void AddMovie(Movie movie)
     {
@@ -37,7 +43,7 @@ public class MovieRepository : IMovieRepository
         _context.SaveChanges();
     }
     // Add a method to delete a movie
-    public void DeleteMovie(int id)
+    public void DeleteMovie(Guid id)
     {
         var movie = _context.Movies.FirstOrDefault(m => m.Id == id);
         if (movie != null)

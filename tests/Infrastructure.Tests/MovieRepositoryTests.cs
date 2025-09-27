@@ -17,8 +17,8 @@ public class MovieRepositoryTests
 
         using var context = new HiveDbContext(options);
         context.Movies.AddRange(
-            new Movie { Id = 1, Name = "Movie 1" },
-            new Movie { Id = 2, Name = "Movie 2" }
+            new Movie { Name = "Movie 1" },
+            new Movie { Name = "Movie 2" }
         );
         context.SaveChanges();
 
@@ -53,18 +53,19 @@ public class MovieRepositoryTests
         var options = new DbContextOptionsBuilder<HiveDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
-    
+
+        var guid = Guid.CreateVersion7();
         using var context = new HiveDbContext(options);
-        var movie = new Movie { Id = 1, Name = "Movie 1" };
+        var movie = new Movie { Id = guid, Name = "Movie 1" };
         context.Movies.Add(movie);
         context.SaveChanges();
     
         var repository = new MovieRepository(context);
     
-        var result = repository.GetMovieById(1);
+        var result = repository.GetMovieById(guid);
     
         Assert.NotNull(result);
-        Assert.Equal(1, result.Id);
+        Assert.Equal(guid, result.Id);
         Assert.Equal("Movie 1", result.Name);
     }
     
@@ -75,11 +76,13 @@ public class MovieRepositoryTests
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
     
+        var guid = Guid.CreateVersion7();
+        
         using var context = new HiveDbContext(options);
     
         var repository = new MovieRepository(context);
     
-        var result = repository.GetMovieById(1);
+        var result = repository.GetMovieById(guid);
     
         Assert.Null(result);
     }
@@ -90,14 +93,15 @@ public class MovieRepositoryTests
         var options = new DbContextOptionsBuilder<HiveDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
+        var guid = Guid.CreateVersion7();
     
         using var context = new HiveDbContext(options);
         var repository = new MovieRepository(context);
-        var movie = new Movie { Id = 1, Name = "Movie 1" };
+        var movie = new Movie { Id = guid, Name = "Movie 1" };
     
         repository.AddMovie(movie);
     
-        var result = context.Movies.FirstOrDefault(m => m.Id == 1);
+        var result = context.Movies.FirstOrDefault(m => m.Id == guid);
         Assert.NotNull(result);
         Assert.Equal("Movie 1", result.Name);
     }
@@ -109,8 +113,10 @@ public class MovieRepositoryTests
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
     
+        var guid = Guid.CreateVersion7();
+        
         using var context = new HiveDbContext(options);
-        var movie = new Movie { Id = 1, Name = "Movie 1" };
+        var movie = new Movie { Id = guid, Name = "Movie 1" };
         context.Movies.Add(movie);
         context.SaveChanges();
     
@@ -118,7 +124,7 @@ public class MovieRepositoryTests
         movie.Name = "Updated Movie";
         repository.UpdateMovie(movie);
     
-        var result = context.Movies.FirstOrDefault(m => m.Id == 1);
+        var result = context.Movies.FirstOrDefault(m => m.Id == guid);
         Assert.NotNull(result);
         Assert.Equal("Updated Movie", result.Name);
     }
@@ -130,15 +136,17 @@ public class MovieRepositoryTests
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
     
+        var guid = Guid.CreateVersion7();
+        
         using var context = new HiveDbContext(options);
-        var movie = new Movie { Id = 1, Name = "Movie 1" };
+        var movie = new Movie { Id = guid, Name = "Movie 1" };
         context.Movies.Add(movie);
         context.SaveChanges();
     
         var repository = new MovieRepository(context);
-        repository.DeleteMovie(1);
+        repository.DeleteMovie(guid);
     
-        var result = context.Movies.FirstOrDefault(m => m.Id == 1);
+        var result = context.Movies.FirstOrDefault(m => m.Id == guid);
         Assert.Null(result);
     }
     
@@ -148,11 +156,11 @@ public class MovieRepositoryTests
         var options = new DbContextOptionsBuilder<HiveDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
-    
+        var guid = Guid.CreateVersion7();
         using var context = new HiveDbContext(options);
     
         var repository = new MovieRepository(context);
-        repository.DeleteMovie(1);
+        repository.DeleteMovie(guid);
     
         Assert.Empty(context.Movies);
     }
@@ -166,9 +174,9 @@ public class MovieRepositoryTests
     
         using var context = new HiveDbContext(options);
         context.Movies.AddRange(
-            new Movie { Id = 1, Name = "Movie 1" },
-            new Movie { Id = 2, Name = "Movie 2" },
-            new Movie { Id = 3, Name = "Movie 3" }
+            new Movie { Name = "Movie 1" },
+            new Movie { Name = "Movie 2" },
+            new Movie { Name = "Movie 3" }
         );
         context.SaveChanges();
     
@@ -189,8 +197,8 @@ public class MovieRepositoryTests
     
         using var context = new HiveDbContext(options);
         context.Movies.AddRange(
-            new Movie { Id = 1, Name = "Movie 1" },
-            new Movie { Id = 2, Name = "Movie 2" }
+            new Movie { Name = "Movie 1" },
+            new Movie { Name = "Movie 2" }
         );
         context.SaveChanges();
     

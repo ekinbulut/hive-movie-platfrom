@@ -2,8 +2,6 @@
 
 public partial class Movie
 {
-    public int Id { get; set; }
-
     public string? Name { get; set; }
 
     public string? FilePath { get; set; }
@@ -19,4 +17,8 @@ public partial class Movie
     public string? SubTitleFilePath { get; set; }
 
     public string? Image { get; set; }
+
+    public Guid Id { get; set; }
+
+    public string? HashValue { get; set; }
 }
