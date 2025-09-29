@@ -10,24 +10,17 @@ using Watcher.Console.App.Events;
 namespace Watcher.Console.App.Handlers;
 
 
-public class MessageHandler : BaseMessageHandler<FileFoundEvent>
+public class MessageHandler(IMovieRepository movieRepository) : BaseMessageHandler<FileFoundEvent>
 {
-    private IMovieRepository _movieRepository;
-    
-    public MessageHandler(IMovieRepository movieRepository)
-    {
-        _movieRepository = movieRepository;
-    }
-    
     protected override Task OnHandle(FileFoundEvent message, string? causationId)
     {
         var title = TitleParser.ExtractTitle(message.MetaData.Name);
         var hashValue = HashHelper.ComputeSha256Hash(title);
-        var exists = _movieRepository.GetMovieByHashValue(hashValue);
+        var exists = movieRepository.GetMovieByHashValue(hashValue);
 
         if (!exists)
         {
-            _movieRepository.AddMovie(new Movie()
+            movieRepository.AddMovie(new Movie()
             {
                 FilePath = message.FilePaths.FirstOrDefault(),
                 CreatedTime = DateTime.UtcNow,

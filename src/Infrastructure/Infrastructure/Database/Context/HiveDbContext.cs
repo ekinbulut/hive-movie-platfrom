@@ -42,6 +42,7 @@ public partial class HiveDbContext : DbContext
             entity.Property(e => e.SubTitleFilePath)
                 .HasColumnType("character varying")
                 .HasColumnName("sub_title_file_path");
+            entity.Property(e => e.ReleaseDate).HasColumnName("release_date");
         });
 
         OnModelCreatingPartial(modelBuilder);

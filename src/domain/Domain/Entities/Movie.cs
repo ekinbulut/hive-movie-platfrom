@@ -21,4 +21,6 @@ public partial class Movie
     public Guid Id { get; set; }
 
     public string? HashValue { get; set; }
+
+    public int? ReleaseDate { get; set; }
 }

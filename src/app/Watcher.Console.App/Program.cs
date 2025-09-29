@@ -101,8 +101,6 @@ await bus.Subscribe<FileFoundEvent>();
 // --- Define a lightweight publish DTO that implements your abstraction -------
 var defaultCorrelationId = Guid.NewGuid().ToString("N");
 
-var events = new List<FileFoundEvent>();
-
 using var watcher = new Watcher.Console.App.Services.Watcher(watcherArgs.FolderToWatch);
 watcher.Changed += (s, e) =>
     Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {e.ChangeType}: {e.FullPath}");
