@@ -1,15 +1,18 @@
 using Domain.Interfaces;
 using FastEndpoints;
 using Features.Extensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Features.GetAllMovies;
 
+[Authorize]
 public class GetAllMoviesEndpoint(IMovieRepository movieRepository) : Endpoint<GetMoviesRequest, GetMovieResponse>
 {
     public override void Configure()
     {
         Post("/movies");
-        AllowAnonymous();
+        AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
     }
 
     public override async Task HandleAsync(GetMoviesRequest req, CancellationToken ct)

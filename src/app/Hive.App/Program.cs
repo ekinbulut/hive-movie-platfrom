@@ -1,7 +1,10 @@
+using System.Text;
 using FastEndpoints;
 using Features.Extensions;
 using Infrastructure.Database.Extensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.Negotiate;
+using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,11 +18,24 @@ builder.Services.AddOpenApi();
 builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
     .AddNegotiate();
 
-builder.Services.AddAuthorization(options =>
-{
-    // By default, all incoming requests will be authorized according to the default policy.
-    // options.FallbackPolicy = options.DefaultPolicy;
-});
+// Configure JWT Authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+            ValidAudience = builder.Configuration["JwtSettings:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"]))
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddFastApiRoutes();
 
@@ -36,6 +52,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -1,7 +1,27 @@
 @Hive.App_HostAddress = http://localhost:5154
+@Idm.Api_HostAddress = http://localhost:5188
 
+### Get JWT Token from IDM Server
+POST {{Idm.Api_HostAddress}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "ekin.bulut",
+  "password": "181985"
+}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    client.global.set("jwt_token", response.body.accessToken);
+%}
+
+### Use the JWT Token to access a protected endpoint in Hive App
 POST {{Hive.App_HostAddress}}/v1/api/movies
 Content-Type: application/json
+Authorization: Bearer {{jwt_token}}
 
 {
   "pageSize": 15,
