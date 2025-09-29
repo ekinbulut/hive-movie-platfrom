@@ -1,13 +1,13 @@
 namespace Domain.Abstraction.Mediator;
 
-public interface ICommandHandler<TCommand, TResult>
-    where TCommand : ICommand<TCommand, TResult>
+public interface ICommandHandler<in TCommand, TResult>
+    where TCommand : ICommand<TResult>
 {
-    TResult Handle(TCommand command);
+    Task<TResult> HandleAsync(TCommand command, CancellationToken cancellationToken = default);
 }
 
-public interface ICommandHandler<TCommand>
-    where TCommand : ICommand<TCommand>
+public interface ICommandHandler<in TCommand>
+    where TCommand : ICommand
 {
-    void Handle(TCommand command);
+    Task HandleAsync(TCommand command, CancellationToken cancellationToken = default);
 }

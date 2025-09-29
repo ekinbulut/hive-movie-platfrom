@@ -4,27 +4,55 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Domain.Extension;
 
-// write a dependency injection extension method to register the mediator and all command handlers in the assembly
-
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddMediator(this IServiceCollection services, Assembly assembly)
+    public static IServiceCollection AddMediator(this IServiceCollection services, params Assembly[] assemblies)
     {
-        services.AddSingleton<IMediator, Mediator>();
+        services.AddScoped<IMediator, Mediator>();
 
-        var commandHandlerTypes = assembly.GetTypes()
-            .Where(t => !t.IsAbstract && !t.IsInterface)
-            .SelectMany(t => t.GetInterfaces(), (t, i) => new { Type = t, Interface = i })
-            .Where(ti => ti.Interface.IsGenericType &&
-                         (ti.Interface.GetGenericTypeDefinition() == typeof(ICommandHandler<>) ||
-                          ti.Interface.GetGenericTypeDefinition() == typeof(ICommandHandler<,>)))
-            .Select(ti => new { HandlerType = ti.Type, ServiceType = ti.Interface });
+        // Get all assemblies if none provided
+        var assembliesToScan = assemblies.Any() 
+            ? assemblies 
+            : new[] { Assembly.GetExecutingAssembly(), Assembly.GetCallingAssembly(), Assembly.GetEntryAssembly() }
+                .Where(a => a != null)
+                .Concat(AppDomain.CurrentDomain.GetAssemblies())
+                .Distinct()
+                .ToArray();
 
-        foreach (var handler in commandHandlerTypes)
+        foreach (var assembly in assembliesToScan)
         {
-            services.AddTransient(handler.ServiceType, handler.HandlerType);
+            RegisterHandlersFromAssembly(services, assembly);
         }
 
         return services;
     }
+    
+    private static void RegisterHandlersFromAssembly(IServiceCollection services, Assembly assembly)
+    {
+        var handlerTypes = assembly.GetTypes()
+            .Where(t => t.IsClass && !t.IsAbstract && !t.IsInterface)
+            .Where(t => t.GetInterfaces().Any(i =>
+                i.IsGenericType && (
+                    i.GetGenericTypeDefinition() == typeof(ICommandHandler<,>) ||
+                    i.GetGenericTypeDefinition() == typeof(ICommandHandler<>) ||
+                    i.GetGenericTypeDefinition() == typeof(IQueryHandler<,>)
+                )))
+            .ToList();
+
+        foreach (var handlerType in handlerTypes)
+        {
+            var interfaces = handlerType.GetInterfaces()
+                .Where(i => i.IsGenericType && (
+                    i.GetGenericTypeDefinition() == typeof(ICommandHandler<,>) ||
+                    i.GetGenericTypeDefinition() == typeof(ICommandHandler<>) ||
+                    i.GetGenericTypeDefinition() == typeof(IQueryHandler<,>)
+                ));
+
+            foreach (var @interface in interfaces)
+            {
+                services.AddScoped(@interface, handlerType);
+            }
+        }
+    }
+
 }

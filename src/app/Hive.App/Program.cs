@@ -1,4 +1,6 @@
+using System.Reflection;
 using System.Text;
+using Domain.Extension;
 using FastEndpoints;
 using Features.Extensions;
 using Infrastructure.Database.Extensions;
@@ -36,6 +38,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+
+// Force load the Features assembly before registering mediator
+var featuresAssembly = Assembly.LoadFrom(Path.Combine(AppContext.BaseDirectory, "Features.dll"));
+
+builder.Services.AddMediator(
+    typeof(Program).Assembly,
+    featuresAssembly
+);
+
+// builder.Services.AddMediatorWithDebug();
+
 
 builder.Services.AddFastApiRoutes();
 

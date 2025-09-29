@@ -2,9 +2,7 @@ namespace Domain.Abstraction.Mediator;
 
 public interface IMediator
 {
-    void Send<TCommand>(TCommand command)
-        where TCommand : ICommand<TCommand>;
-
-    TResult Send<TCommand, TResult>(TCommand command)
-        where TCommand : ICommand<TCommand, TResult>;
+    Task<TResult> SendAsync<TResult>(ICommand<TResult> command, CancellationToken cancellationToken = default);
+    Task SendAsync(ICommand command, CancellationToken cancellationToken = default);
+    Task<TResult> SendAsync<TResult>(IQuery<TResult> query, CancellationToken cancellationToken = default);
 }
