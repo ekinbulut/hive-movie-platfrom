@@ -26,9 +26,10 @@ public class GetAllMoviesQueryHandler : IQueryHandler<GetAllMoviesQuery, GetMovi
                 FilePath = m.FilePath,
                 SubTitleFilePath = m.SubTitleFilePath,
                 FileSize = m.FileSize.ToHumanReadableSize(),
-                Image = m.Image
+                Image = m.Image,
+                CreatedTime = m.CreatedTime,
                 
-            }).ToList(),
+            }).OrderByDescending(x=> x.CreatedTime).ToList(),
             PageSize = query.PageSize,
             PageNumber = query.PageNumber,
         });
