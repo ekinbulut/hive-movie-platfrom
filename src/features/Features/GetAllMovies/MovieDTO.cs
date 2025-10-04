@@ -13,4 +13,7 @@ public class MovieDTO
     public string? SubTitleFilePath { get; set; }
 
     public string? Image { get; set; }
+    
+    //get full image url
+    public string? FullImageUrl => string.IsNullOrEmpty(Image) ? null : $"https://image.tmdb.org/t/p/w500{Image}";
 }

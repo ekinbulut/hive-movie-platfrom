@@ -338,7 +338,7 @@ body {
 /* Grid View */
 .movies-container.grid-view {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 1.5rem;
 }
 
@@ -361,30 +361,59 @@ body {
 }
 
 .movie-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+}
+
+.movie-card:active {
+    transform: translateY(-2px);
+    transition: all 0.1s ease;
 }
 
 .movie-image {
     width: 100%;
-    height: 200px;
+    height: 420px;
     background: #f8f9fa;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
     overflow: hidden;
+    border-radius: 8px 8px 0 0;
 }
 
 .movie-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: opacity 0.3s ease;
+}
+
+.movie-image img[loading="lazy"] {
+    opacity: 0;
+    animation: fadeIn 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
 }
 
 .movie-image .placeholder {
     color: #999;
     font-size: 3rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.movie-image .placeholder small {
+    font-size: 0.8rem;
+    color: #aaa;
 }
 
 .movie-info {
@@ -426,9 +455,10 @@ body {
 }
 
 .list-view .movie-image {
-    width: 80px;
-    height: 120px;
+    width: 160px;
+    height: 240px;
     flex-shrink: 0;
+    border-radius: 6px;
 }
 
 .list-view .movie-info {
@@ -574,10 +604,11 @@ body {
 }
 
 .modal-body .movie-image {
-    width: 200px;
-    height: 300px;
+    width: 280px;
+    height: 420px;
     border-radius: 8px;
     overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .info-row {

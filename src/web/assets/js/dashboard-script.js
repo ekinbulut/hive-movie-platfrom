@@ -110,6 +110,16 @@ class MoviesAPI {
                 pageSize: data.pageSize
             });
 
+            // Log sample movie data to verify fullImageUrl field
+            if (data.movies && data.movies.length > 0) {
+                console.log('Sample movie data:', {
+                    name: data.movies[0].name,
+                    hasImage: !!data.movies[0].image,
+                    hasFullImageUrl: !!data.movies[0].fullImageUrl,
+                    fullImageUrl: data.movies[0].fullImageUrl
+                });
+            }
+
             return data;
         } catch (error) {
             console.error('Movies API error:', error);
@@ -319,25 +329,27 @@ class DashboardController {
         const movieName = Utils.formatMovieName(movie);
         const fileSize = Utils.formatFileSize(movie.fileSize);
         
-        card.innerHTML = `
-            <div class="movie-image">
-                ${movie.image ? 
-                    `<img src="${movie.image}" alt="${movieName}" onerror="this.parentElement.innerHTML='<div class=\\"placeholder\\">🎬</div>'" />` :
-                    '<div class="placeholder">🎬</div>'
-                }
-            </div>
-            <div class="movie-info">
-                <div class="movie-title">${movieName}</div>
-                <div class="movie-details">
-                    <div class="movie-detail">
-                        <strong>Size:</strong> <span>${fileSize}</span>
-                    </div>
-                    <div class="movie-detail">
-                        <strong>Subtitle:</strong> <span>${movie.subTitleFilePath ? 'Yes' : 'No'}</span>
-                    </div>
-                </div>
-            </div>
-        `;
+        // Create movie image container
+        const movieImageDiv = document.createElement('div');
+        movieImageDiv.className = 'movie-image';
+
+        if (movie.fullImageUrl) {
+            const img = document.createElement('img');
+            img.src = movie.fullImageUrl;
+            img.alt = movieName;
+            img.loading = 'lazy';
+            img.addEventListener('error', () => {
+                movieImageDiv.innerHTML = '<div class="placeholder">🎬<br><small>No Image</small></div>';
+            });
+            movieImageDiv.appendChild(img);
+        } else {
+            movieImageDiv.innerHTML = '<div class="placeholder">🎬<br><small>No Image</small></div>';
+        }
+
+        // Movie card now only contains the poster image
+
+        // Insert the image container at the beginning
+        card.insertBefore(movieImageDiv, card.firstChild);
 
         return card;
     }
@@ -354,8 +366,8 @@ class DashboardController {
         document.getElementById('modalSubtitlePath').textContent = movie.subTitleFilePath || 'N/A';
         
         const modalImage = document.getElementById('modalImage');
-        if (movie.image) {
-            modalImage.src = movie.image;
+        if (movie.fullImageUrl) {
+            modalImage.src = movie.fullImageUrl;
             modalImage.style.display = 'block';
         } else {
             modalImage.style.display = 'none';
