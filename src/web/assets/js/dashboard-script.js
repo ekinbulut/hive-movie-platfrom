@@ -103,15 +103,33 @@ class MoviesAPI {
                 throw new Error(`${errorMessage} (Status: ${response.status})`);
             }
 
-            const data = await response.json();
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                console.error('Failed to parse API response as JSON:', jsonError);
+                throw new Error('Server returned invalid data format. Please check your API server.');
+            }
+            
+            // Validate API response structure
+            if (!data || typeof data !== 'object') {
+                throw new Error('Server returned empty or invalid data. Please check your API server and try again.');
+            }
+            
+            // Ensure movies array exists, default to empty array if null/undefined
+            if (!Array.isArray(data.movies)) {
+                console.warn('API response missing movies array, defaulting to empty array');
+                data.movies = [];
+            }
+            
             console.log('Movies fetched successfully:', {
-                totalMovies: data.movies?.length || 0,
-                pageNumber: data.pageNumber,
-                pageSize: data.pageSize
+                totalMovies: data.movies.length,
+                pageNumber: data.pageNumber || 1,
+                pageSize: data.pageSize || this.pageSize
             });
 
             // Log sample movie data to verify fullImageUrl field
-            if (data.movies && data.movies.length > 0) {
+            if (data.movies.length > 0) {
                 console.log('Sample movie data:', {
                     name: data.movies[0].name,
                     hasImage: !!data.movies[0].image,
@@ -136,11 +154,12 @@ class MoviesAPI {
 // Utility functions
 class Utils {
     static formatFileSize(fileSize) {
-        if (!fileSize) return 'Unknown';
+        // Handle null, undefined, empty string
+        if (!fileSize || fileSize === '') return 'Unknown';
         
         // If fileSize is already a formatted string from API, return it directly
         if (typeof fileSize === 'string') {
-            return fileSize;
+            return fileSize.trim() || 'Unknown';
         }
         
         // Fallback for numeric values (legacy support)
@@ -155,14 +174,29 @@ class Utils {
     }
 
     static formatMovieName(movie) {
-        if (movie.name) return movie.name;
-        if (movie.filePath) {
-            // Extract filename from path
-            const pathParts = movie.filePath.split(/[/\\]/);
-            const filename = pathParts[pathParts.length - 1];
-            // Remove file extension
-            return filename.replace(/\.[^/.]+$/, '');
+        // Handle null/undefined movie object
+        if (!movie || typeof movie !== 'object') {
+            return 'Unknown Movie';
         }
+        
+        // Use movie name if available and not empty
+        if (movie.name && typeof movie.name === 'string' && movie.name.trim()) {
+            return movie.name.trim();
+        }
+        
+        // Fallback to filename extraction from path
+        if (movie.filePath && typeof movie.filePath === 'string' && movie.filePath.trim()) {
+            try {
+                const pathParts = movie.filePath.split(/[/\\]/);
+                const filename = pathParts[pathParts.length - 1];
+                // Remove file extension
+                const nameWithoutExt = filename.replace(/\.[^/.]+$/, '');
+                return nameWithoutExt.trim() || 'Unknown Movie';
+            } catch (error) {
+                console.warn('Error extracting movie name from file path:', movie.filePath, error);
+            }
+        }
+        
         return 'Unknown Movie';
     }
 
@@ -278,7 +312,24 @@ class DashboardController {
         
         try {
             const data = await MoviesAPI.getMovies(this.currentPage, this.pageSize);
-            this.movies = data.movies || [];
+            
+            // Validate response data
+            if (!data) {
+                throw new Error('API returned null or undefined response');
+            }
+            
+            // Ensure movies array exists and is valid
+            this.movies = Array.isArray(data.movies) ? data.movies : [];
+            
+            // Validate movie objects
+            this.movies = this.movies.filter(movie => {
+                if (!movie || typeof movie !== 'object') {
+                    console.warn('Invalid movie object found, skipping:', movie);
+                    return false;
+                }
+                return true;
+            });
+            
             this.renderMovies();
             this.updatePagination(data);
             
@@ -292,6 +343,9 @@ class DashboardController {
             console.error('Failed to load movies:', error);
             this.showErrorState(error.message);
             
+            // Reset to empty state on error
+            this.movies = [];
+            
             if (error.message.includes('Authentication expired')) {
                 setTimeout(() => {
                     window.location.href = 'login.html';
@@ -303,8 +357,22 @@ class DashboardController {
     renderMovies() {
         this.moviesContainer.innerHTML = '';
         
+        // Ensure movies array is valid
+        if (!Array.isArray(this.movies)) {
+            console.warn('Movies is not an array, resetting to empty array');
+            this.movies = [];
+            return;
+        }
+        
         const filteredMovies = this.movies.filter(movie => {
+            // Validate movie object
+            if (!movie || typeof movie !== 'object') {
+                console.warn('Invalid movie object in filter:', movie);
+                return false;
+            }
+            
             if (!this.searchQuery) return true;
+            
             const movieName = Utils.formatMovieName(movie).toLowerCase();
             const filePath = (movie.filePath || '').toLowerCase();
             return movieName.includes(this.searchQuery.toLowerCase()) || 
@@ -312,12 +380,24 @@ class DashboardController {
         });
 
         filteredMovies.forEach(movie => {
-            const movieCard = this.createMovieCard(movie);
-            this.moviesContainer.appendChild(movieCard);
+            try {
+                const movieCard = this.createMovieCard(movie);
+                if (movieCard) {
+                    this.moviesContainer.appendChild(movieCard);
+                }
+            } catch (error) {
+                console.error('Error creating movie card for movie:', movie, error);
+            }
         });
     }
 
     createMovieCard(movie) {
+        // Validate movie object
+        if (!movie || typeof movie !== 'object') {
+            console.error('Invalid movie object passed to createMovieCard:', movie);
+            return null;
+        }
+
         const card = document.createElement('div');
         card.className = 'movie-card';
         card.addEventListener('click', () => this.showMovieModal(movie));
@@ -355,7 +435,10 @@ class DashboardController {
         document.getElementById('modalTitle').textContent = movieName;
         document.getElementById('modalName').textContent = movie.name || 'N/A';
         document.getElementById('modalFileSize').textContent = fileSize;
-        document.getElementById('modalSubtitlePath').textContent = movie.subTitleFilePath || 'N/A';
+        
+        // Set subtitle availability as Yes/No
+        const hasSubtitle = movie.subTitleFilePath && movie.subTitleFilePath.trim() !== '';
+        document.getElementById('modalHasSubtitle').textContent = hasSubtitle ? 'Yes' : 'No';
         
         const modalImage = document.getElementById('modalImage');
         if (movie.fullImageUrl) {
