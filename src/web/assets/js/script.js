@@ -1,7 +1,7 @@
 // API Configuration
 const API_CONFIG = {
-    AUTH_BASE_URL: 'http://localhost:5188',
-    AUTH_LOGIN_ENDPOINT: 'http://localhost:5188/auth/login'
+    AUTH_BASE_URL: 'http://localhost:8082',
+    AUTH_LOGIN_ENDPOINT: 'http://localhost:8082/auth/login'
 };
 
 // Session management utilities

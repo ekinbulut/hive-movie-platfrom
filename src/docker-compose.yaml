@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  hive-app:
+    build:
+      context: .
+      dockerfile: src/app/Hive.App/Dockerfile
+    image: localhost/hive-app:latest
+    container_name: hive-app
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    restart: unless-stopped
+    networks:
+      - hive-network
+  hive-idm:
+    build:
+      context: .
+      dockerfile: src/idm/Hive.Idm.Api/Dockerfile
+    image: localhost/hive-idm:latest
+    container_name: hive-idm
+    ports:
+      - "8082:8082"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8082
+    restart: unless-stopped
+    networks:
+      - hive-network
+  hive-watcher:
+    image: localhost/hive-watcher:latest
+    container_name: hive-watcher
+    command: [ "--watch", "/app/shared" ]
+    volumes:
+      - "/Users/ekinbulut/Desktop/shared/Plex/Shared Movies:/app/shared"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    restart: unless-stopped
+    networks:
+      - hive-network
+networks:
+  hive-network:
+    driver: bridge

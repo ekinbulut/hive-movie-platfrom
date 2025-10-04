@@ -127,25 +127,60 @@ watcher.PerformInitialScan();
 
 watcher.Start();
 
+var cancellationTokenSource = new CancellationTokenSource();
+
 Console.CancelKeyPress += (sender, e) =>
 {
     e.Cancel = true;
     Console.WriteLine("\nShutting down watcher...");
-    watcher.Stop();
-    Environment.Exit(0);
+    cancellationTokenSource.Cancel();
 };
 
-while (true)
+// Check if running in interactive mode
+if (Environment.UserInteractive && !Console.IsInputRedirected)
 {
-    var key = Console.ReadKey(true);
-    if (key.KeyChar == 'q' || key.KeyChar == 'Q')
+    Console.WriteLine("Press 'q' to quit or Ctrl+C to exit.");
+    
+    // Run the interactive loop in a background task
+    _ = Task.Run(async () =>
     {
-        Console.WriteLine("\nShutting down watcher...");
-        watcher.Stop();
-        break;
-    }
+        try
+        {
+            while (!cancellationTokenSource.Token.IsCancellationRequested)
+            {
+                var key = Console.ReadKey(true);
+                if (key.KeyChar == 'q' || key.KeyChar == 'Q')
+                {
+                    Console.WriteLine("\nShutting down watcher...");
+                    cancellationTokenSource.Cancel();
+                    break;
+                }
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            // Console input not available, ignore
+        }
+    });
+}
+else
+{
+    Console.WriteLine("Running in non-interactive mode. Use Ctrl+C to exit.");
 }
 
-// Stop Rebus/Host when loop exits
+// Wait for cancellation
+try
+{
+    await Task.Delay(Timeout.Infinite, cancellationTokenSource.Token);
+}
+catch (TaskCanceledException)
+{
+    // Expected when cancellation is requested
+}
+
+Console.WriteLine("Stopping watcher...");
+watcher.Stop();
+
+// Stop Rebus/Host
 await host.StopAsync();
 

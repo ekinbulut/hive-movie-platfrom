@@ -1,8 +1,8 @@
 // API Configuration
 const API_CONFIG = {
-    AUTH_BASE_URL: 'http://localhost:5188',
-    MOVIES_BASE_URL: 'http://localhost:5154',
-    MOVIES_ENDPOINT: 'http://localhost:5154/v1/api/movies'
+    AUTH_BASE_URL: 'http://localhost:8082',
+    MOVIES_BASE_URL: 'http://localhost:8080',
+    MOVIES_ENDPOINT: 'http://localhost:8080/v1/api/movies'
 };
 
 // Import SessionManager from login page

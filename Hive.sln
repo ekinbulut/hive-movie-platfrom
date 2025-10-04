@@ -1,6 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{4917BA1D-3E0A-4972-B014-EBB93B7D6A6B}"
+	ProjectSection(SolutionItems) = preProject
+		src\docker-compose.yaml = src\docker-compose.yaml
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "src\domain\Domain\Domain.csproj", "{73772E64-A4D5-4AF1-BE97-43181C842270}"
 EndProject
