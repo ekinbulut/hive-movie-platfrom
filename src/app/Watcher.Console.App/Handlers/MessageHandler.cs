@@ -10,7 +10,7 @@ using Watcher.Console.App.Events;
 namespace Watcher.Console.App.Handlers;
 
 
-public class MessageHandler(IMovieRepository movieRepository) : BaseMessageHandler<FileFoundEvent>
+public class MessageHandler(IMovieRepository movieRepository, ITmdbApiService tmdbApiService) : BaseMessageHandler<FileFoundEvent>
 {
     protected override Task OnHandle(FileFoundEvent message, string? causationId)
     {
@@ -20,6 +20,13 @@ public class MessageHandler(IMovieRepository movieRepository) : BaseMessageHandl
 
         if (!exists)
         {
+            var year = TitleParser.ExtractYear(message.MetaData.Name) ?? 0;
+        
+            var result = tmdbApiService.SearchMoviesAsync(title, year).GetAwaiter().GetResult();
+            var imagePath = result.Results.FirstOrDefault(x => 
+                DateTime.TryParse(x.ReleaseDate, out var releaseDate) && 
+                releaseDate.Year == year)?.PosterPath;
+            
             movieRepository.AddMovie(new Movie()
             {
                 FilePath = message.FilePaths.FirstOrDefault(),
@@ -28,8 +35,9 @@ public class MessageHandler(IMovieRepository movieRepository) : BaseMessageHandl
                 Name = title,
                 IsActive = true,
                 SubTitleFilePath = null,
-                Image = null,
-                HashValue = hashValue
+                Image = imagePath,
+                HashValue = hashValue,
+                ReleaseDate = year 
             });
         }
         

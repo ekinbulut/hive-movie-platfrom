@@ -8,7 +8,9 @@
  * Reviewed by: Ekin BULUT
  */
 
+using Domain.Interfaces;
 using Infrastructure.Database.Extensions;
+using Infrastructure.Integration.Services;
 using Infrastructure.Messaging.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -54,6 +56,9 @@ var builder = Host.CreateDefaultBuilder(args)
         services.AddMessaging(rabbitConn, inputQueue, 1);
         
         services.AddDbContext(ctx.Configuration);
+
+        services.AddHttpClient();
+        services.AddTransient<ITmdbApiService, TmdbApiService>();
     });
 
 using var host = builder.Build();
