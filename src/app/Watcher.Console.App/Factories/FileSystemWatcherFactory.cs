@@ -5,8 +5,8 @@ namespace Watcher.Console.App.Factories;
 
 public class FileSystemWatcherFactory : IFileSystemWatcherFactory
 {
-    public IFileSystemWatcherWrapper Create(string path, string filter)
+    public IFileSystemWatcherWrapper Create(string path, string filter = "*.*")
     {
-        return new FileSystemWatcherWrapper(new FileSystemWatcher(path, filter));
+        return new FileSystemWatcherWrapper(path, filter);
     }
 }

@@ -17,7 +17,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Rebus.Config;
+using Watcher.Console.App.Abstracts;
 using Watcher.Console.App.Events;
+using Watcher.Console.App.Factories;
 using Watcher.Console.App.Handlers;
 using Watcher.Console.App.Models;
 using Watcher.Console.App.Services;
@@ -59,6 +61,11 @@ var builder = Host.CreateDefaultBuilder(args)
 
         services.AddHttpClient();
         services.AddTransient<ITmdbApiService, TmdbApiService>();
+        
+        // Register watcher services with proper buffer management
+        services.AddTransient<IFileSystemWatcherFactory, FileSystemWatcherFactory>();
+        services.AddTransient<IFileSystemService, FileSystemService>();
+        services.AddTransient<IConsoleLogger, ConsoleLogger>();
     });
 
 using var host = builder.Build();
@@ -100,13 +107,22 @@ await bus.Subscribe<FileFoundEvent>();
 // --- Define a lightweight publish DTO that implements your abstraction -------
 var defaultCorrelationId = Guid.NewGuid().ToString("N");
 
-using var watcher = new Watcher.Console.App.Services.Watcher(watcherArgs.FolderToWatch);
+// Create watcher with proper DI services to enable buffer management
+var watcherFactory = host.Services.GetRequiredService<IFileSystemWatcherFactory>();
+var fileSystemService = host.Services.GetRequiredService<IFileSystemService>();
+var logger = host.Services.GetRequiredService<IConsoleLogger>();
+
+using var watcher = new Watcher.Console.App.Services.Watcher(
+    watcherArgs.FolderToWatch,
+    watcherFactory,
+    fileSystemService,
+    logger);
+
 watcher.Changed += (s, e) =>
     Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {e.ChangeType}: {e.FullPath}");
 watcher.Renamed += (s, e) =>
     Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Renamed: {e.OldFullPath} -> {e.FullPath}");
-watcher.Error += (s, e) =>
-    Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Error: {e.GetException().Message}");
+
 watcher.FileContentDiscovered += (s, e) =>
 {
     Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] File Discovered: {e.Path} (Size: {e.Size} bytes)");
@@ -119,7 +135,7 @@ watcher.FileContentDiscovered += (s, e) =>
         CausationId = defaultCorrelationId
     };
 
-    bus.Publish(fileEvent);
+    //bus.Publish(fileEvent);
 };
    
 

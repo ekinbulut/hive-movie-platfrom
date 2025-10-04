@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+using System.IO;
 using Watcher.Console.App.Abstracts;
 using Watcher.Console.App.Factories;
 using Watcher.Console.App.Models;
@@ -11,6 +13,10 @@ public class Watcher : IDisposable
     private readonly IConsoleLogger _logger;
     private readonly string _rootPath;
     private readonly HashSet<string> _allowedExtensions;
+    
+    // Add throttling to prevent overwhelming the system
+    private readonly ConcurrentDictionary<string, DateTime> _lastProcessedTimes = new();
+    private readonly TimeSpan _throttleDelay = TimeSpan.FromMilliseconds(500); // 500ms throttle per file
 
     public event FileSystemEventHandler? Changed;
     public event RenamedEventHandler? Renamed;
@@ -64,8 +70,8 @@ public class Watcher : IDisposable
         _watcher.IncludeSubdirectories = includeSubdirectories;
 
         _watcher.Created += OnFileCreated;
-        _watcher.Changed += (s, e) => Changed?.Invoke(s, e);
-        _watcher.Deleted += (s, e) => Changed?.Invoke(s, e);
+        _watcher.Changed += OnFileChanged;
+        _watcher.Deleted += OnFileDeleted;
         _watcher.Renamed += (s, e) => Renamed?.Invoke(s, e);
         _watcher.Error += (s, e) => Error?.Invoke(s, e);
     }
@@ -82,28 +88,88 @@ public class Watcher : IDisposable
         return _allowedExtensions.Contains(extension);
     }
 
+    private bool ShouldProcessFile(string filePath)
+    {
+        // Throttle file processing to avoid overwhelming the system
+        var now = DateTime.Now;
+        if (_lastProcessedTimes.TryGetValue(filePath, out var lastProcessed))
+        {
+            if (now - lastProcessed < _throttleDelay)
+            {
+                return false; // Skip processing if within throttle window
+            }
+        }
+        
+        _lastProcessedTimes.AddOrUpdate(filePath, now, (key, oldValue) => now);
+        
+        // Clean up old entries to prevent memory leaks
+        if (_lastProcessedTimes.Count > 1000)
+        {
+            var cutoff = now - TimeSpan.FromMinutes(5);
+            var keysToRemove = _lastProcessedTimes
+                .Where(kvp => kvp.Value < cutoff)
+                .Select(kvp => kvp.Key)
+                .ToList();
+            
+            foreach (var key in keysToRemove)
+            {
+                _lastProcessedTimes.TryRemove(key, out _);
+            }
+        }
+        
+        return true;
+    }
+
     private void OnFileCreated(object? sender, FileSystemEventArgs e)
     {
         Changed?.Invoke(sender, e);
 
-        if (_fileSystemService.FileExists(e.FullPath) && IsAllowedFile(e.FullPath))
+        if (ShouldProcessFile(e.FullPath) && _fileSystemService.FileExists(e.FullPath) && IsAllowedFile(e.FullPath))
         {
-            try
+            ProcessFileAsync(e.FullPath);
+        }
+    }
+
+    private void OnFileChanged(object? sender, FileSystemEventArgs e)
+    {
+        Changed?.Invoke(sender, e);
+
+        if (ShouldProcessFile(e.FullPath) && _fileSystemService.FileExists(e.FullPath) && IsAllowedFile(e.FullPath))
+        {
+            ProcessFileAsync(e.FullPath);
+        }
+    }
+
+    private void OnFileDeleted(object? sender, FileSystemEventArgs e)
+    {
+        Changed?.Invoke(sender, e);
+        // Remove from throttle dictionary when file is deleted
+        _lastProcessedTimes.TryRemove(e.FullPath, out _);
+    }
+
+    private async void ProcessFileAsync(string filePath)
+    {
+        try
+        {
+            // Add a small delay to ensure file operations are complete
+            await Task.Delay(100);
+            
+            if (!_fileSystemService.FileExists(filePath))
+                return;
+
+            var fileInfo = _fileSystemService.GetFileInfo(filePath);
+            var fileContent = new FileContentInfo
             {
-                var fileInfo = _fileSystemService.GetFileInfo(e.FullPath);
-                var fileContent = new FileContentInfo
-                {
-                    Name = fileInfo.Name,
-                    Extension = fileInfo.Extension,
-                    Size = fileInfo.Length,
-                    Path = fileInfo.FullName
-                };
-                FileContentDiscovered?.Invoke(this, fileContent);
-            }
-            catch (Exception ex)
-            {
-                _logger.WriteLine($"Error processing new file {e.FullPath}: {ex.Message}");
-            }
+                Name = fileInfo.Name,
+                Extension = fileInfo.Extension,
+                Size = fileInfo.Length,
+                Path = fileInfo.FullName
+            };
+            FileContentDiscovered?.Invoke(this, fileContent);
+        }
+        catch (Exception ex)
+        {
+            _logger.WriteLine($"Error processing file {filePath}: {ex.Message}");
         }
     }
 
@@ -150,52 +216,7 @@ public class Watcher : IDisposable
         }
         catch (Exception ex)
         {
-            _logger.WriteLine($"Error during scan: {ex.Message}");
-        }
-    }
-
-    public void RescanFolder()
-    {
-        ScanFolder();
-    }
-
-    public void PrintSummary()
-    {
-        _logger.WriteLine($"\nFolder Summary for: {_rootPath}");
-        _logger.WriteLine($"Filtered Extensions: {string.Join(", ", _allowedExtensions)}");
-        _logger.WriteLine($"Files: {TotalFileCount}");
-        _logger.WriteLine($"Directories: {TotalDirectoryCount}");
-        _logger.WriteLine($"Total Size: {FormatBytes(TotalSizeBytes)}");
-
-        if (Directories.Any())
-        {
-            _logger.WriteLine("\nTop 5 largest directories:");
-            var topDirs = Directories
-                .Select(d => new {
-                    Dir = d,
-                    Size = GetDirectorySize(d.FullName)
-                })
-                .OrderByDescending(x => x.Size)
-                .Take(5);
-
-            foreach (var item in topDirs)
-            {
-                _logger.WriteLine($"  {item.Dir.Name}: {FormatBytes(item.Size)}");
-            }
-        }
-    }
-
-    private long GetDirectorySize(string dirPath)
-    {
-        try
-        {
-            return _fileSystemService.GetFiles(dirPath, "*", SearchOption.AllDirectories)
-                .Where(f => IsAllowedFile(f.FullName))
-                .Sum(f => f.Length);
-        }
-        catch
-        {
-            return 0;
+            _logger.WriteLine($"Error during folder scan: {ex.Message}");
         }
     }
 
@@ -212,11 +233,13 @@ public class Watcher : IDisposable
         return $"{number:n1} {suffixes[counter]}";
     }
 
-    public void Start() => _watcher.EnableRaisingEvents = true;
-    public void Stop() => _watcher.EnableRaisingEvents = false;
+    public void Start() => _watcher.Start();
+
+    public void Stop() => _watcher.Stop();
 
     public void Dispose()
     {
         _watcher?.Dispose();
+        GC.SuppressFinalize(this);
     }
 }
