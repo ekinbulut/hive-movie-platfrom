@@ -35,7 +35,7 @@ services:
     container_name: hive-watcher
     command: [ "--watch", "/app/shared" ]
     volumes:
-      - "/Users/ekinbulut/Desktop/shared/Plex/Shared Movies:/app/shared"
+      - "/home/user/shared/Plex/Shared Movies:/app/shared"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
     restart: unless-stopped
