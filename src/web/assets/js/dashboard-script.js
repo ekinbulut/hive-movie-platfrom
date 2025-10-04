@@ -203,9 +203,7 @@ class DashboardController {
         this.searchBtn = document.getElementById('searchBtn');
         this.pageSizeSelect = document.getElementById('pageSizeSelect');
         
-        // View toggle
-        this.gridViewBtn = document.getElementById('gridViewBtn');
-        this.listViewBtn = document.getElementById('listViewBtn');
+        // View is always grid (list view removed)
         
         // Content containers
         this.loadingState = document.getElementById('loadingState');
@@ -241,9 +239,7 @@ class DashboardController {
         // Controls
         this.pageSizeSelect.addEventListener('change', () => this.handlePageSizeChange());
         
-        // View toggle
-        this.gridViewBtn.addEventListener('click', () => this.setView('grid'));
-        this.listViewBtn.addEventListener('click', () => this.setView('list'));
+        // View is always grid (list view removed)
         
         // Pagination
         this.prevBtn.addEventListener('click', () => this.goToPreviousPage());
@@ -347,9 +343,7 @@ class DashboardController {
         }
 
         // Movie card now only contains the poster image
-
-        // Insert the image container at the beginning
-        card.insertBefore(movieImageDiv, card.firstChild);
+        card.appendChild(movieImageDiv);
 
         return card;
     }
@@ -359,9 +353,7 @@ class DashboardController {
         const fileSize = Utils.formatFileSize(movie.fileSize);
 
         document.getElementById('modalTitle').textContent = movieName;
-        document.getElementById('modalId').textContent = movie.id || 'N/A';
         document.getElementById('modalName').textContent = movie.name || 'N/A';
-        document.getElementById('modalFilePath').textContent = movie.filePath || 'N/A';
         document.getElementById('modalFileSize').textContent = fileSize;
         document.getElementById('modalSubtitlePath').textContent = movie.subTitleFilePath || 'N/A';
         
@@ -394,14 +386,7 @@ class DashboardController {
         this.pagination.style.display = 'flex';
     }
 
-    setView(view) {
-        this.currentView = view;
-        this.moviesContainer.className = `movies-container ${view}-view`;
-        
-        // Update button states
-        this.gridViewBtn.classList.toggle('active', view === 'grid');
-        this.listViewBtn.classList.toggle('active', view === 'list');
-    }
+    // View functionality removed - always uses grid view
 
     handleSearch() {
         this.searchQuery = this.searchInput.value.trim();

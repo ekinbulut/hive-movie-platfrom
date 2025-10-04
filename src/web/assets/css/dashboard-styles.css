@@ -238,44 +238,9 @@ body {
     border: 1px solid #e1e5e9;
 }
 
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
 
-.section-header h2 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #333;
-}
 
-.view-toggle {
-    display: flex;
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 0.25rem;
-}
 
-.view-btn {
-    background: none;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    color: #666;
-    transition: all 0.3s ease;
-}
-
-.view-btn.active {
-    background: white;
-    color: #667eea;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
 
 /* Loading, Error, Empty States */
 .loading-state, .error-state, .empty-state {
@@ -342,12 +307,7 @@ body {
     gap: 1.5rem;
 }
 
-/* List View */
-.movies-container.list-view {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
+
 
 /* Movie Card - Grid View */
 .movie-card {
@@ -379,7 +339,7 @@ body {
     justify-content: center;
     position: relative;
     overflow: hidden;
-    border-radius: 8px 8px 0 0;
+    border-radius: 12px;
 }
 
 .movie-image img {
@@ -446,42 +406,7 @@ body {
     min-width: 80px;
 }
 
-/* Movie Card - List View */
-.list-view .movie-card {
-    display: flex;
-    align-items: center;
-    padding: 1rem;
-    gap: 1rem;
-}
 
-.list-view .movie-image {
-    width: 160px;
-    height: 240px;
-    flex-shrink: 0;
-    border-radius: 6px;
-}
-
-.list-view .movie-info {
-    flex: 1;
-    padding: 0;
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr;
-    gap: 1rem;
-    align-items: center;
-}
-
-.list-view .movie-title {
-    margin-bottom: 0;
-}
-
-.list-view .movie-details {
-    display: contents;
-}
-
-.list-view .movie-detail {
-    flex-direction: column;
-    text-align: center;
-}
 
 /* Pagination */
 .pagination {
@@ -539,7 +464,7 @@ body {
 .modal-content {
     background: white;
     border-radius: 12px;
-    max-width: 600px;
+    max-width: 800px;
     width: 90%;
     max-height: 90vh;
     overflow-y: auto;
@@ -598,7 +523,7 @@ body {
 
 .movie-detail-grid {
     display: grid;
-    grid-template-columns: 200px 1fr;
+    grid-template-columns: 280px 1fr;
     gap: 2rem;
     align-items: start;
 }
@@ -679,19 +604,13 @@ body {
         justify-content: space-between;
     }
     
-    .section-header {
-        flex-direction: column;
-        align-items: stretch;
-    }
+
     
     .movies-container.grid-view {
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     }
     
-    .list-view .movie-info {
-        grid-template-columns: 1fr;
-        gap: 0.5rem;
-    }
+
     
     .movie-detail-grid {
         grid-template-columns: 1fr;
