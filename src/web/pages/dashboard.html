@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Project Hive</title>
+    <link rel="stylesheet" href="../assets/css/dashboard-styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h2>🎬 Project Hive</h2>
+            </div>
+            <div class="nav-menu">
+                <div class="user-info">
+                    <span class="welcome-text">Welcome back!</span>
+                    <button class="logout-btn" id="logoutBtn">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Dashboard -->
+    <main class="dashboard">
+        <div class="dashboard-container">
+            <!-- Header Section -->
+            <div class="dashboard-header">
+                <h1>Movies Dashboard</h1>
+                <p>Browse and manage your movie collection</p>
+            </div>
+
+            <!-- Controls Section -->
+            <div class="controls-section">
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Search movies..." class="search-input">
+                    <button class="search-btn" id="searchBtn">🔍</button>
+                </div>
+                
+                <div class="filter-controls">
+                    <select id="pageSizeSelect" class="page-size-select">
+                        <option value="10">10 per page</option>
+                        <option value="25" selected>25 per page</option>
+                        <option value="50">50 per page</option>
+                        <option value="100">100 per page</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Movies Grid -->
+            <div class="movies-section">
+                <div class="section-header">
+                    <h2>Movies Collection</h2>
+                    <div class="view-toggle">
+                        <button class="view-btn active" id="gridViewBtn" data-view="grid">🔲 Grid</button>
+                        <button class="view-btn" id="listViewBtn" data-view="list">📋 List</button>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingState" class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Loading movies...</p>
+                </div>
+
+                <!-- Error State -->
+                <div id="errorState" class="error-state" style="display: none;">
+                    <div class="error-icon">⚠️</div>
+                    <h3>Failed to load movies</h3>
+                    <p id="errorMessage">Something went wrong while fetching movies.</p>
+                    <button class="retry-btn" id="retryBtn">Try Again</button>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <div class="empty-icon">🎬</div>
+                    <h3>No movies found</h3>
+                    <p>Your movie collection appears to be empty.</p>
+                </div>
+
+                <!-- Movies Container -->
+                <div id="moviesContainer" class="movies-container grid-view">
+                    <!-- Movies will be populated here -->
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination" id="pagination" style="display: none;">
+                    <button class="page-btn" id="prevBtn" disabled>← Previous</button>
+                    <div class="page-info">
+                        <span id="pageInfo">Page 1 of 1</span>
+                    </div>
+                    <button class="page-btn" id="nextBtn" disabled>Next →</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Movie Detail Modal -->
+    <div id="movieModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Movie Details</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="movie-detail-grid">
+                    <div class="movie-image">
+                        <img id="modalImage" src="" alt="Movie poster" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDIwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjZjVmNWY1Ii8+CjxwYXRoIGQ9Ik02MCAyMDBMMTAwIDE2MEwxNDAgMjAwTDE0MCAyNDBMNjAgMjQwVjIwMFoiIGZpbGw9IiNkZGQiLz4KPGV4dCB4PSIxMDAiIHk9IjE4MCIgZmlsbD0iI2FhYSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5ObyBJbWFnZTwvdGV4dD4KPC9zdmc+'" />
+                    </div>
+                    <div class="movie-info">
+                        <div class="info-row">
+                            <label>ID:</label>
+                            <span id="modalId"></span>
+                        </div>
+                        <div class="info-row">
+                            <label>Name:</label>
+                            <span id="modalName"></span>
+                        </div>
+                        <div class="info-row">
+                            <label>File Path:</label>
+                            <span id="modalFilePath"></span>
+                        </div>
+                        <div class="info-row">
+                            <label>File Size:</label>
+                            <span id="modalFileSize"></span>
+                        </div>
+                        <div class="info-row">
+                            <label>Subtitle Path:</label>
+                            <span id="modalSubtitlePath"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="closeModalBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/js/dashboard-script.js"></script>
+</body>
+</html>

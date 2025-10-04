@@ -1,0 +1,22 @@
+eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJiZDFhZGY1YmIzMTdkMGM2ZmYwM2ZlNmIxNTAwNDlmMCIsIm5iZiI6MTc1OTE1MDY2OC4zMTcsInN1YiI6IjY4ZGE4MjRjNTJhZjVlMzA3M2UxY2QxYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.dRjM7_koXy74K7yXLWjv2RcdCgqN9zubysqfSAaukbg
+
+
+curl --request GET \
+     --url 'https://api.themoviedb.org/3/movie/11' \
+     --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJiZDFhZGY1YmIzMTdkMGM2ZmYwM2ZlNmIxNTAwNDlmMCIsIm5iZiI6MTc1OTE1MDY2OC4zMTcsInN1YiI6IjY4ZGE4MjRjNTJhZjVlMzA3M2UxY2QxYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.dRjM7_koXy74K7yXLWjv2RcdCgqN9zubysqfSAaukbg'
+
+
+
+     curl --request GET \
+     --url 'https://api.themoviedb.org/3/search/movie?query=Companion&include_adult=false&language=en-US&page=1&year=2025' \
+     --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJiZDFhZGY1YmIzMTdkMGM2ZmYwM2ZlNmIxNTAwNDlmMCIsIm5iZiI6MTc1OTE1MDY2OC4zMTcsInN1YiI6IjY4ZGE4MjRjNTJhZjVlMzA3M2UxY2QxYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.dRjM7_koXy74K7yXLWjv2RcdCgqN9zubysqfSAaukbg' \
+     --header 'accept: application/json'
+
+     extract poster_path
+
+
+
+
+
+
+     https://image.tmdb.org/t/p/w780/qA6MHDGDY0LyutjLUgFJRbPXLpW.jpg

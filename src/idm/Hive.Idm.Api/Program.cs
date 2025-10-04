@@ -19,6 +19,16 @@ builder.Services.AddDbContextInfra(builder.Configuration);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalhost", policy =>
+    {
+        policy.WithOrigins("http://localhost:8000", "http://127.0.0.1:8000")
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
+
 
 // Add JWT configuration
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -53,7 +63,7 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 
 }
-
+app.UseCors("AllowLocalhost");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseFastEndpoints();

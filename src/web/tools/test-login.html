@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - No CORS Version</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 400px;
+            width: 100%;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h1 style="text-align: center; margin-bottom: 30px;">Login Test (No CORS)</h1>
+        
+        <div class="warning">
+            ⚠️ This version uses a form submission to bypass CORS issues.
+            Your backend needs CORS configuration for the JavaScript version to work.
+        </div>
+        
+        <!-- Method 1: Form submission (bypasses CORS) -->
+        <h3>Method 1: Form Submission</h3>
+        <form id="loginForm" action="http://localhost:5188/auth/login" method="POST" target="loginFrame">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required placeholder="Enter username">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required placeholder="Enter password">
+            </div>
+            
+            <button type="submit">Login via Form</button>
+        </form>
+        
+        <!-- Hidden iframe to capture form response -->
+        <iframe name="loginFrame" style="display: none;"></iframe>
+        
+        <!-- Method 2: JavaScript (will fail due to CORS) -->
+        <hr style="margin: 30px 0;">
+        <h3>Method 2: JavaScript Fetch</h3>
+        <button onclick="testJavaScriptLogin()">Test JavaScript Login</button>
+        
+        <div id="result" class="result" style="display: none;"></div>
+        
+        <!-- Instructions -->
+        <hr style="margin: 30px 0;">
+        <h3>How to Fix CORS in Your Backend</h3>
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; font-size: 14px;">
+            <strong>For ASP.NET Core, add to Program.cs:</strong>
+            <pre style="background: white; padding: 10px; border-radius: 4px; margin: 10px 0;">
+// Add CORS services
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:8000")
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+// Use CORS middleware (before app.UseAuthentication())
+app.UseCors("AllowFrontend");
+            </pre>
+        </div>
+    </div>
+
+    <script>
+        async function testJavaScriptLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                showResult('Please enter username and password', 'error');
+                return;
+            }
+            
+            showResult('Attempting JavaScript login...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:5188/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`SUCCESS!\nToken: ${data.accessToken}\nType: ${data.tokenType}\nExpires: ${data.expiresIn}s`, 'success');
+                } else {
+                    showResult(`ERROR: ${data.message || 'Login failed'}\nStatus: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                showResult(`CORS ERROR: ${error.message}\n\nThis confirms that CORS is not configured on your backend.`, 'error');
+            }
+        }
+        
+        function showResult(message, type) {
+            const result = document.getElementById('result');
+            result.textContent = message;
+            result.className = `result ${type}`;
+            result.style.display = 'block';
+        }
+        
+        // Monitor iframe for form submission result
+        document.addEventListener('DOMContentLoaded', function() {
+            const iframe = document.querySelector('iframe[name="loginFrame"]');
+            iframe.onload = function() {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    const response = iframeDoc.body.textContent;
+                    if (response && response.trim()) {
+                        showResult(`Form submission response:\n${response}`, 'success');
+                    }
+                } catch (e) {
+                    showResult('Form submitted (cross-origin response hidden by browser security)', 'success');
+                }
+            };
+        });
+    </script>
+</body>
+</html>

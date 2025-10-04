@@ -8,18 +8,12 @@
  * Reviewed by: Ekin BULUT
  */
 
-using System.Globalization;
-using System.Text.Json.Serialization.Metadata;
-using Domain.Abstraction;
 using Infrastructure.Database.Extensions;
-using Infrastructure.Messaging.Contracts;
 using Infrastructure.Messaging.Extensions;
-using Infrastructure.Messaging.Handlers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Rebus.Config;
 using Watcher.Console.App.Events;
 using Watcher.Console.App.Handlers;

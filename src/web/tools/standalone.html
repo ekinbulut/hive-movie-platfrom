@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Project Hive</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* Login container */
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Header */
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-header h1 {
+            color: #333;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        /* Form styles */
+        .login-form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background-color: #f8f9fa;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #a0a6b1;
+        }
+
+        /* Login button */
+        .login-button {
+            width: 100%;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .login-button:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .login-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Loading spinner */
+        .loading-spinner svg {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Error message */
+        .error-message {
+            background-color: #fee;
+            color: #d63384;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+            font-size: 14px;
+            margin-top: 16px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Modal styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 400px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            animation: modalSlideUp 0.3s ease;
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .modal-header h2 {
+            color: #28a745;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-body p {
+            margin-bottom: 12px;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .modal-body strong {
+            font-weight: 600;
+        }
+
+        .modal-footer {
+            padding: 16px 24px 24px;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .button-primary, .button-secondary {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .button-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .button-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .button-secondary {
+            background: #f8f9fa;
+            color: #666;
+            border: 1px solid #e1e5e9;
+        }
+
+        .button-secondary:hover {
+            background: #e9ecef;
+        }
+
+        /* Debug info */
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-family: monospace;
+            max-width: 300px;
+            z-index: 2000;
+        }
+
+        /* Responsive design */
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 24px;
+                margin: 16px;
+            }
+            
+            .login-header h1 {
+                font-size: 24px;
+            }
+            
+            .modal-content {
+                margin: 16px;
+                width: calc(100% - 32px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Debug info -->
+    <div class="debug-info" id="debugInfo">
+        Status: Loading...
+    </div>
+
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>Welcome Back</h1>
+                <p>Sign in to your account</p>
+            </div>
+            
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        required 
+                        autocomplete="username"
+                        placeholder="Enter your username"
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        required 
+                        autocomplete="current-password"
+                        placeholder="Enter your password"
+                    >
+                </div>
+                
+                <button type="submit" class="login-button" id="loginButton">
+                    <span class="button-text">Sign In</span>
+                    <span class="loading-spinner" style="display: none;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                        </svg>
+                    </span>
+                </button>
+                
+                <div id="errorMessage" class="error-message" style="display: none;"></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Debug logging
+        const debugInfo = document.getElementById('debugInfo');
+        function updateDebug(message) {
+            debugInfo.innerHTML = `Status: ${message}<br>Time: ${new Date().toLocaleTimeString()}<br>URL: ${window.location.href}`;
+            console.log('Debug:', message);
+        }
+
+        updateDebug('Page loaded successfully');
+
+        // Session management utilities
+        class SessionManager {
+            static setAccessToken(accessToken, tokenType, expiresIn) {
+                const tokenData = {
+                    accessToken,
+                    tokenType,
+                    expiresIn,
+                    timestamp: Date.now()
+                };
+                
+                // Store in sessionStorage (expires when tab is closed)
+                sessionStorage.setItem('authToken', JSON.stringify(tokenData));
+                
+                // Also store in localStorage with expiration for persistence
+                const expirationTime = Date.now() + (expiresIn * 1000);
+                const persistentData = {
+                    ...tokenData,
+                    expirationTime
+                };
+                localStorage.setItem('authToken', JSON.stringify(persistentData));
+                
+                updateDebug('Token stored successfully');
+            }
+            
+            static getAccessToken() {
+                // First try sessionStorage
+                let tokenData = sessionStorage.getItem('authToken');
+                if (tokenData) {
+                    return JSON.parse(tokenData);
+                }
+                
+                // Then try localStorage with expiration check
+                tokenData = localStorage.getItem('authToken');
+                if (tokenData) {
+                    const data = JSON.parse(tokenData);
+                    if (Date.now() < data.expirationTime) {
+                        // Token is still valid, restore to sessionStorage
+                        sessionStorage.setItem('authToken', JSON.stringify(data));
+                        return data;
+                    } else {
+                        // Token expired, remove it
+                        localStorage.removeItem('authToken');
+                    }
+                }
+                
+                return null;
+            }
+            
+            static clearAccessToken() {
+                sessionStorage.removeItem('authToken');
+                localStorage.removeItem('authToken');
+            }
+            
+            static isAuthenticated() {
+                const tokenData = this.getAccessToken();
+                if (!tokenData) return false;
+                
+                // Check if token is expired
+                const expirationTime = tokenData.timestamp + (tokenData.expiresIn * 1000);
+                return Date.now() < expirationTime;
+            }
+        }
+
+        // API utilities with better error handling
+        class AuthAPI {
+            static async login(username, password) {
+                updateDebug('Attempting login...');
+                
+                try {
+                    const response = await fetch('http://localhost:5188/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            username,
+                            password
+                        })
+                    });
+                    
+                    updateDebug(`API Response: ${response.status}`);
+                    
+                    if (!response.ok) {
+                        let errorMessage = 'Login failed';
+                        
+                        try {
+                            const errorData = await response.json();
+                            errorMessage = errorData.message || errorData.error || errorMessage;
+                        } catch (e) {
+                            // If response is not JSON, use status text
+                            errorMessage = response.statusText || errorMessage;
+                        }
+                        
+                        throw new Error(`${errorMessage} (Status: ${response.status})`);
+                    }
+                    
+                    const data = await response.json();
+                    updateDebug('Login successful');
+                    return data;
+                    
+                } catch (error) {
+                    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                        updateDebug('Network error - API server not reachable');
+                        throw new Error('Cannot connect to server. Please ensure the API server is running on localhost:5188');
+                    }
+                    updateDebug(`Login error: ${error.message}`);
+                    throw error;
+                }
+            }
+        }
+
+        // DOM elements
+        const loginForm = document.getElementById('loginForm');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const loginButton = document.getElementById('loginButton');
+        const buttonText = loginButton.querySelector('.button-text');
+        const loadingSpinner = loginButton.querySelector('.loading-spinner');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // UI utility functions
+        function showLoading() {
+            loginButton.disabled = true;
+            buttonText.style.display = 'none';
+            loadingSpinner.style.display = 'inline-block';
+        }
+
+        function hideLoading() {
+            loginButton.disabled = false;
+            buttonText.style.display = 'inline-block';
+            loadingSpinner.style.display = 'none';
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            updateDebug(`Error shown: ${message}`);
+            
+            // Auto-hide error after 10 seconds
+            setTimeout(() => {
+                hideError();
+            }, 10000);
+        }
+
+        function hideError() {
+            errorMessage.style.display = 'none';
+        }
+
+
+
+        // Form validation
+        function validateForm() {
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+            
+            if (!username) {
+                showError('Please enter your username');
+                usernameInput.focus();
+                return false;
+            }
+            
+            if (!password) {
+                showError('Please enter your password');
+                passwordInput.focus();
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Event handlers
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            // Hide any previous errors
+            hideError();
+            
+            // Validate form
+            if (!validateForm()) {
+                return;
+            }
+            
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+            
+            try {
+                showLoading();
+                
+                // Make API call
+                const response = await AuthAPI.login(username, password);
+                
+                // Store token in session
+                SessionManager.setAccessToken(
+                    response.accessToken,
+                    response.tokenType,
+                    response.expiresIn
+                );
+                
+                // Redirect directly to dashboard
+                console.log('User authenticated, redirecting to dashboard...');
+                window.location.href = '../pages/dashboard.html';
+                
+                console.log('Login successful:', {
+                    tokenType: response.tokenType,
+                    expiresIn: response.expiresIn,
+                    tokenStored: true
+                });
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                showError(error.message || 'Login failed. Please try again.');
+            } finally {
+                hideLoading();
+            }
+        }
+
+
+
+        // Event listeners
+        loginForm.addEventListener('submit', handleLogin);
+
+        // Clear error when user starts typing
+        usernameInput.addEventListener('input', hideError);
+        passwordInput.addEventListener('input', hideError);
+
+        // Check if user is already authenticated on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDebug('DOM loaded, checking authentication');
+            
+            if (SessionManager.isAuthenticated()) {
+                const tokenData = SessionManager.getAccessToken();
+                console.log('User already authenticated:', tokenData);
+                updateDebug('User already authenticated');
+                
+                // Optionally redirect to main application
+                // window.location.href = '/dashboard';
+                
+                // Or show a message
+                showError('You are already logged in!');
+            } else {
+                updateDebug('No existing authentication found');
+            }
+            
+            // Focus username input for better UX
+            usernameInput.focus();
+        });
+
+        // Export for potential use in other modules
+        window.SessionManager = SessionManager;
+        window.AuthAPI = AuthAPI;
+
+        // Test API connectivity on load
+        setTimeout(async () => {
+            try {
+                updateDebug('Testing API connectivity...');
+                const response = await fetch('http://localhost:5188/auth/login', {
+                    method: 'OPTIONS'
+                });
+                updateDebug('API server is reachable');
+            } catch (error) {
+                updateDebug('API server not reachable - Please start your backend');
+                showError('⚠️ API server not running. Please start your backend server on localhost:5188');
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

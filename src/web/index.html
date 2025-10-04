@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Hive - Loading...</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .loading-container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .manual-links {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .link {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: background 0.3s ease;
+        }
+        
+        .link:hover {
+            background: #5a6fd8;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <h1>🎬 Project Hive</h1>
+        <p>Checking authentication status...</p>
+        <div class="manual-links" style="display: none;" id="manualLinks">
+            <a href="pages/login.html" class="link">Login</a>
+            <a href="pages/dashboard.html" class="link">Dashboard</a>
+        </div>
+    </div>
+
+    <script>
+        // Session management utilities (minimal version)
+        class SessionManager {
+            static getAccessToken() {
+                let tokenData = sessionStorage.getItem('authToken');
+                if (tokenData) {
+                    return JSON.parse(tokenData);
+                }
+                
+                tokenData = localStorage.getItem('authToken');
+                if (tokenData) {
+                    const data = JSON.parse(tokenData);
+                    if (Date.now() < data.expirationTime) {
+                        sessionStorage.setItem('authToken', JSON.stringify(data));
+                        return data;
+                    } else {
+                        localStorage.removeItem('authToken');
+                    }
+                }
+                
+                return null;
+            }
+            
+            static isAuthenticated() {
+                const tokenData = this.getAccessToken();
+                if (!tokenData) return false;
+                
+                const expirationTime = tokenData.timestamp + (tokenData.expiresIn * 1000);
+                return Date.now() < expirationTime;
+            }
+        }
+
+        // Check authentication and redirect
+        function checkAndRedirect() {
+            setTimeout(() => {
+                if (SessionManager.isAuthenticated()) {
+                    console.log('User authenticated, redirecting to dashboard...');
+                    window.location.href = 'pages/dashboard.html';
+                } else {
+                    console.log('User not authenticated, redirecting to login...');
+                    window.location.href = 'pages/login.html';
+                }
+            }, 1000); // Small delay for better UX
+        }
+
+        // Show manual links after 3 seconds if auto-redirect fails
+        function showManualLinks() {
+            setTimeout(() => {
+                document.getElementById('manualLinks').style.display = 'flex';
+                document.querySelector('p').textContent = 'Auto-redirect failed. Please choose manually:';
+            }, 3000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAndRedirect();
+            showManualLinks();
+        });
+    </script>
+</body>
+</html>
