@@ -1,19 +1,45 @@
 eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJiZDFhZGY1YmIzMTdkMGM2ZmYwM2ZlNmIxNTAwNDlmMCIsIm5iZiI6MTc1OTE1MDY2OC4zMTcsInN1YiI6IjY4ZGE4MjRjNTJhZjVlMzA3M2UxY2QxYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.dRjM7_koXy74K7yXLWjv2RcdCgqN9zubysqfSAaukbg
 
+search by movie id:
 
 curl --request GET \
      --url 'https://api.themoviedb.org/3/movie/11' \
      --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJiZDFhZGY1YmIzMTdkMGM2ZmYwM2ZlNmIxNTAwNDlmMCIsIm5iZiI6MTc1OTE1MDY2OC4zMTcsInN1YiI6IjY4ZGE4MjRjNTJhZjVlMzA3M2UxY2QxYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.dRjM7_koXy74K7yXLWjv2RcdCgqN9zubysqfSAaukbg'
 
 
+search by movie name:
 
-     curl --request GET \
+curl --request GET \
      --url 'https://api.themoviedb.org/3/search/movie?query=Companion&include_adult=false&language=en-US&page=1&year=2025' \
      --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJiZDFhZGY1YmIzMTdkMGM2ZmYwM2ZlNmIxNTAwNDlmMCIsIm5iZiI6MTc1OTE1MDY2OC4zMTcsInN1YiI6IjY4ZGE4MjRjNTJhZjVlMzA3M2UxY2QxYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.dRjM7_koXy74K7yXLWjv2RcdCgqN9zubysqfSAaukbg' \
      --header 'accept: application/json'
 
-     extract poster_path
 
+https://api.themoviedb.org/search/movie?query=Funny Face&include_adult=false&language=en-US&page=1
+
+
+
+
+the response from the above request is:
+
+    {
+      "adult": false,
+      "backdrop_path": null,
+      "genre_ids": [],
+      "id": 1232579,
+      "original_language": "en",
+      "original_title": "Romeo and Juliet",
+      "overview": "Anna Rose O'Sullivan and Marcelino Sambé star in this 20th-century ballet masterpiece, brought to life by Prokofiev’s ravishing score and Kenneth MacMillan's evocative and detailed choreography.",
+      "popularity": 0.0932,
+      "poster_path": "/vajAaor4fxU8SPWGXxo0KiFHCCJ.jpg",
+      "release_date": "2022-01-28",
+      "title": "Romeo and Juliet",
+      "video": false,
+      "vote_average": 0,
+      "vote_count": 0
+    }
+    
+extract poster_path:
 
 
 
