@@ -359,6 +359,12 @@
 
         updateDebug('Page loaded successfully');
 
+        // API Configuration
+        const API_CONFIG = {
+            AUTH_BASE_URL: 'http://localhost:5188',
+            AUTH_LOGIN_ENDPOINT: 'http://localhost:5188/auth/login'
+        };
+
         // Session management utilities
         class SessionManager {
             static setAccessToken(accessToken, tokenType, expiresIn) {
@@ -428,7 +434,7 @@
                 updateDebug('Attempting login...');
                 
                 try {
-                    const response = await fetch('http://localhost:5188/auth/login', {
+                    const response = await fetch(API_CONFIG.AUTH_LOGIN_ENDPOINT, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -462,7 +468,7 @@
                 } catch (error) {
                     if (error.name === 'TypeError' && error.message.includes('fetch')) {
                         updateDebug('Network error - API server not reachable');
-                        throw new Error('Cannot connect to server. Please ensure the API server is running on localhost:5188');
+                        throw new Error(`Cannot connect to server. Please ensure the API server is running on ${API_CONFIG.AUTH_BASE_URL.replace('http://', '')}`);
                     }
                     updateDebug(`Login error: ${error.message}`);
                     throw error;
@@ -614,13 +620,13 @@
         setTimeout(async () => {
             try {
                 updateDebug('Testing API connectivity...');
-                const response = await fetch('http://localhost:5188/auth/login', {
+                const response = await fetch(API_CONFIG.AUTH_LOGIN_ENDPOINT, {
                     method: 'OPTIONS'
                 });
                 updateDebug('API server is reachable');
             } catch (error) {
                 updateDebug('API server not reachable - Please start your backend');
-                showError('⚠️ API server not running. Please start your backend server on localhost:5188');
+                showError(`⚠️ API server not running. Please start your backend server on ${API_CONFIG.AUTH_BASE_URL.replace('http://', '')}`);
             }
         }, 1000);
     </script>

@@ -1,3 +1,10 @@
+// API Configuration
+const API_CONFIG = {
+    AUTH_BASE_URL: 'http://localhost:5188',
+    MOVIES_BASE_URL: 'http://localhost:5154',
+    MOVIES_ENDPOINT: 'http://localhost:5154/v1/api/movies'
+};
+
 // Import SessionManager from login page
 // Session management utilities (same as login page)
 class SessionManager {
@@ -64,7 +71,7 @@ class MoviesAPI {
         console.log('Fetching movies:', { pageNumber, pageSize });
 
         try {
-            const response = await fetch('http://localhost:5154/v1/api/movies', {
+            const response = await fetch(API_CONFIG.MOVIES_ENDPOINT, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -108,7 +115,7 @@ class MoviesAPI {
             console.error('Movies API error:', error);
             
             if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-                throw new Error('Cannot connect to movies API server. Please ensure the server is running on localhost:5154');
+                throw new Error(`Cannot connect to movies API server. Please ensure the server is running on ${API_CONFIG.MOVIES_BASE_URL.replace('http://', '')}`);
             }
             
             throw error;

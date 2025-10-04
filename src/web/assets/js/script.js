@@ -1,3 +1,9 @@
+// API Configuration
+const API_CONFIG = {
+    AUTH_BASE_URL: 'http://localhost:5188',
+    AUTH_LOGIN_ENDPOINT: 'http://localhost:5188/auth/login'
+};
+
 // Session management utilities
 class SessionManager {
     static setAccessToken(accessToken, tokenType, expiresIn) {
@@ -62,11 +68,11 @@ class SessionManager {
 // API utilities
 class AuthAPI {
     static async login(username, password) {
-        console.log('Attempting login to:', 'http://localhost:5188/auth/login');
+        console.log('Attempting login to:', API_CONFIG.AUTH_LOGIN_ENDPOINT);
         console.log('Request payload:', { username, password: '[REDACTED]' });
         
         try {
-            const response = await fetch('http://localhost:5188/auth/login', {
+            const response = await fetch(API_CONFIG.AUTH_LOGIN_ENDPOINT, {
                 method: 'POST',
                 mode: 'cors',
                 headers: {
@@ -105,7 +111,7 @@ class AuthAPI {
             console.error('Fetch error:', error);
             
             if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-                throw new Error('Cannot connect to API server. Please ensure:\n1. Your API server is running on localhost:5188\n2. CORS is properly configured on your server\n3. The server accepts requests from localhost:8000');
+                throw new Error(`Cannot connect to API server. Please ensure:\n1. Your API server is running on ${API_CONFIG.AUTH_BASE_URL.replace('http://', '')}\n2. CORS is properly configured on your server\n3. The server accepts requests from localhost:8000`);
             }
             
             if (error.name === 'TypeError' && error.message.includes('NetworkError')) {
@@ -230,14 +236,14 @@ passwordInput.addEventListener('input', hideError);
 async function testAPIConnectivity() {
     try {
         console.log('Testing API server connectivity...');
-        const response = await fetch('http://localhost:5188/auth/login', {
+        const response = await fetch(API_CONFIG.AUTH_LOGIN_ENDPOINT, {
             method: 'OPTIONS'
         });
         console.log('API server connectivity test - Status:', response.status);
         return true;
     } catch (error) {
         console.error('API server connectivity test failed:', error);
-        showError('⚠️ Cannot connect to API server at localhost:5188. Please ensure your backend server is running.');
+        showError(`⚠️ Cannot connect to API server at ${API_CONFIG.AUTH_BASE_URL.replace('http://', '')}. Please ensure your backend server is running.`);
         return false;
     }
 }

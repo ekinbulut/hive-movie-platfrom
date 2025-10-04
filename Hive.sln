@@ -28,6 +28,39 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hive.Idm.Api", "src\idm\Hiv
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hive.Idm.Infrastructure", "src\idm\Hive.Idm.Infrastructure\Hive.Idm.Infrastructure.csproj", "{623D4765-A19A-48CB-A50E-F6FD70DC3EF1}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "web", "web", "{AF1A2D8B-8E62-4944-B54E-F2A8F4FA7B70}"
+	ProjectSection(SolutionItems) = preProject
+		src\web\PROJECT_STRUCTURE.md = src\web\PROJECT_STRUCTURE.md
+		src\web\README.md = src\web\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "assests", "assests", "{E6654E72-51C6-493C-B06B-DF90363EA84C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pages", "pages", "{1EF75711-81E6-48FF-8FC0-E50BE63846EA}"
+	ProjectSection(SolutionItems) = preProject
+		src\web\pages\dashboard.html = src\web\pages\dashboard.html
+		src\web\pages\login.html = src\web\pages\login.html
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "css", "css", "{E98FEDDD-AEBC-40B7-BAF6-2FAB429E2CB8}"
+	ProjectSection(SolutionItems) = preProject
+		src\web\assets\css\dashboard-styles.css = src\web\assets\css\dashboard-styles.css
+		src\web\assets\css\styles.css = src\web\assets\css\styles.css
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "js", "js", "{5B1EF705-76F6-46D1-AC6E-4A2A11E124B6}"
+	ProjectSection(SolutionItems) = preProject
+		src\web\assets\js\dashboard-script.js = src\web\assets\js\dashboard-script.js
+		src\web\assets\js\script.js = src\web\assets\js\script.js
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{5503BA60-337E-49F5-9B07-8E56F6813B1C}"
+	ProjectSection(SolutionItems) = preProject
+		src\web\tools\standalone.html = src\web\tools\standalone.html
+		src\web\tools\test-api.html = src\web\tools\test-api.html
+		src\web\tools\test-login.html = src\web\tools\test-login.html
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +79,12 @@ Global
 		{53BE7246-42B9-4207-B2F8-984EE133DD99} = {4917BA1D-3E0A-4972-B014-EBB93B7D6A6B}
 		{A69A062A-B418-4878-A74B-32F869B4FFF0} = {53BE7246-42B9-4207-B2F8-984EE133DD99}
 		{623D4765-A19A-48CB-A50E-F6FD70DC3EF1} = {53BE7246-42B9-4207-B2F8-984EE133DD99}
+		{AF1A2D8B-8E62-4944-B54E-F2A8F4FA7B70} = {4917BA1D-3E0A-4972-B014-EBB93B7D6A6B}
+		{E6654E72-51C6-493C-B06B-DF90363EA84C} = {AF1A2D8B-8E62-4944-B54E-F2A8F4FA7B70}
+		{1EF75711-81E6-48FF-8FC0-E50BE63846EA} = {AF1A2D8B-8E62-4944-B54E-F2A8F4FA7B70}
+		{E98FEDDD-AEBC-40B7-BAF6-2FAB429E2CB8} = {E6654E72-51C6-493C-B06B-DF90363EA84C}
+		{5B1EF705-76F6-46D1-AC6E-4A2A11E124B6} = {E6654E72-51C6-493C-B06B-DF90363EA84C}
+		{5503BA60-337E-49F5-9B07-8E56F6813B1C} = {AF1A2D8B-8E62-4944-B54E-F2A8F4FA7B70}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{73772E64-A4D5-4AF1-BE97-43181C842270}.Debug|Any CPU.ActiveCfg = Debug|Any CPU

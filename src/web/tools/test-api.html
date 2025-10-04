@@ -103,7 +103,12 @@ app.use(cors({
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:5188';
+        // API Configuration
+        const API_CONFIG = {
+            AUTH_BASE_URL: 'http://localhost:5188',
+            AUTH_LOGIN_ENDPOINT: 'http://localhost:5188/auth/login'
+        };
+        
         const results = document.getElementById('results');
         const currentStatus = document.getElementById('currentStatus');
 
@@ -125,7 +130,7 @@ app.use(cors({
         async function testBasicConnectivity() {
             updateStatus('Testing basic connectivity...', 'info');
             try {
-                const response = await fetch(`${API_BASE}/auth/login`, {
+                const response = await fetch(API_CONFIG.AUTH_LOGIN_ENDPOINT, {
                     method: 'HEAD'
                 });
                 addResult('Basic Connectivity', true, 'Server is reachable', 
@@ -140,7 +145,7 @@ app.use(cors({
         async function testCORS() {
             updateStatus('Testing CORS...', 'info');
             try {
-                const response = await fetch(`${API_BASE}/auth/login`, {
+                const response = await fetch(API_CONFIG.AUTH_LOGIN_ENDPOINT, {
                     method: 'OPTIONS'
                 });
                 
@@ -162,7 +167,7 @@ app.use(cors({
         async function testLoginEndpoint() {
             updateStatus('Testing login endpoint...', 'info');
             try {
-                const response = await fetch(`${API_BASE}/auth/login`, {
+                const response = await fetch(API_CONFIG.AUTH_LOGIN_ENDPOINT, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
