@@ -60,9 +60,6 @@ public class Watcher : IDisposable
             // Default extensions: .mkv, .mov, .png, .jpeg, .jpg
             _allowedExtensions.Add(".mkv");
             _allowedExtensions.Add(".mov");
-            // _allowedExtensions.Add(".png");
-            // _allowedExtensions.Add(".jpeg");
-            // _allowedExtensions.Add(".jpg");
         }
 
         _watcher = watcherFactory.Create(path, filter);
@@ -241,5 +238,19 @@ public class Watcher : IDisposable
     {
         _watcher?.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    public void RescanFolder()
+    {
+        ScanFolder();
+    }
+
+    public void PrintSummary()
+    {
+        _logger.WriteLine($"Filtered Extensions: {string.Join(", ", _allowedExtensions)}");
+        _logger.WriteLine($"Watching directory: {_rootPath}");
+        _logger.WriteLine($"Total files: {TotalFileCount}");
+        _logger.WriteLine($"Total directories: {TotalDirectoryCount}");
+        _logger.WriteLine($"Total size: {FormatBytes(TotalSizeBytes)}");
     }
 }

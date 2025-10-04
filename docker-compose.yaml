@@ -2,7 +2,7 @@ services:
   hive-app:
     build:
       context: .
-      dockerfile: src/app/Hive.App/Dockerfile
+      dockerfile: ./src/app/Hive.App/Dockerfile
     image: localhost/hive-app:latest
     container_name: hive-app
     ports:
@@ -16,7 +16,7 @@ services:
   hive-idm:
     build:
       context: .
-      dockerfile: src/idm/Hive.Idm.Api/Dockerfile
+      dockerfile: ./src/idm/Hive.Idm.Api/Dockerfile
     image: localhost/hive-idm:latest
     container_name: hive-idm
     ports:
@@ -28,6 +28,9 @@ services:
     networks:
       - hive-network
   hive-watcher:
+    build:
+      context: .
+      dockerfile: ./src/app/Watcher.Console.App/Dockerfile
     image: localhost/hive-watcher:latest
     container_name: hive-watcher
     command: [ "--watch", "/app/shared" ]
@@ -40,8 +43,8 @@ services:
       - hive-network
   project-hive-web:
     build:
-      context: ./web
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./src/web/Dockerfile
     image: localhost/project-hive-web:latest
     container_name: project-hive-web
     ports:
