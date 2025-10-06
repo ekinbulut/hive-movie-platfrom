@@ -63,7 +63,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{5503BA60
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hive", "hive", "{645EDB6D-68AB-4EE0-A0F6-747EFE5F588F}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{C80AD27C-0E06-4E29-904B-ED155C7BF076}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bin", "bin", "{C80AD27C-0E06-4E29-904B-ED155C7BF076}"
+	ProjectSection(SolutionItems) = preProject
+		start.sh = start.sh
+		docker-compose.yaml = docker-compose.yaml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
