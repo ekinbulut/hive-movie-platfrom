@@ -11,6 +11,7 @@
 using Domain.Interfaces;
 using Infrastructure.Database.Extensions;
 using Infrastructure.Integration.Services;
+using Infrastructure.Integration.Services.JellyFin;
 using Infrastructure.Messaging.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -61,7 +62,7 @@ var builder = Host.CreateDefaultBuilder(args)
 
         services.AddHttpClient();
         services.AddTransient<ITmdbApiService, TmdbApiService>();
-        
+        services.AddTransient<IJellyFinService, JellyFinService>();
         // Register watcher services with proper buffer management
         services.AddTransient<IFileSystemWatcherFactory, FileSystemWatcherFactory>();
         services.AddTransient<IFileSystemService, FileSystemService>();
@@ -135,7 +136,7 @@ watcher.FileContentDiscovered += (s, e) =>
         CausationId = defaultCorrelationId
     };
 
-    //bus.Publish(fileEvent);
+    bus.Publish(fileEvent);
 };
    
 
