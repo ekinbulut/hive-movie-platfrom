@@ -23,4 +23,6 @@ public partial class Movie
     public string? HashValue { get; set; }
 
     public int? ReleaseDate { get; set; }
+    public string? JellyFinId { get; set; }
+    
 }

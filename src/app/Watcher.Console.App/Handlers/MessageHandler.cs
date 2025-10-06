@@ -10,7 +10,7 @@ using Watcher.Console.App.Events;
 namespace Watcher.Console.App.Handlers;
 
 
-public class MessageHandler(IMovieRepository movieRepository, ITmdbApiService tmdbApiService) : BaseMessageHandler<FileFoundEvent>
+public class MessageHandler(IMovieRepository movieRepository, ITmdbApiService tmdbApiService,  IJellyFinService jellyFinService) : BaseMessageHandler<FileFoundEvent>
 {
     protected override Task OnHandle(FileFoundEvent message, string? causationId)
     {
@@ -21,6 +21,9 @@ public class MessageHandler(IMovieRepository movieRepository, ITmdbApiService tm
         if (!exists)
         {
             var year = TitleParser.ExtractYear(message.MetaData.Name) ?? 0;
+            
+            // Get JellyFin movie ID
+            var jellyFinMovieId = jellyFinService.GetMovieIdByNameAsync(title, year > 0 ? year : null).GetAwaiter().GetResult();
         
             var result = tmdbApiService.SearchMoviesAsync(title, year).GetAwaiter().GetResult();
             var imagePath = result.Results.FirstOrDefault(x => 
@@ -37,7 +40,8 @@ public class MessageHandler(IMovieRepository movieRepository, ITmdbApiService tm
                 SubTitleFilePath = null,
                 Image = imagePath,
                 HashValue = hashValue,
-                ReleaseDate = year 
+                ReleaseDate = year,
+                JellyFinId = jellyFinMovieId
             });
         }
         

@@ -43,6 +43,7 @@ public partial class HiveDbContext : DbContext
                 .HasColumnType("character varying")
                 .HasColumnName("sub_title_file_path");
             entity.Property(e => e.ReleaseDate).HasColumnName("release_date");
+            entity.Property(e => e.JellyFinId).HasColumnName("jellyfin_id");
         });
 
         OnModelCreatingPartial(modelBuilder);
