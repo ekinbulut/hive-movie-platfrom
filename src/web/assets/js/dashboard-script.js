@@ -1,9 +1,25 @@
-// API Configuration
+// API Configuration - Environment aware
 const API_CONFIG = {
-    AUTH_BASE_URL: 'http://localhost:8082',
-    MOVIES_BASE_URL: 'http://localhost:8080',
-    MOVIES_ENDPOINT: 'http://localhost:8080/v1/api/movies'
+    AUTH_BASE_URL: window.location.hostname === 'localhost' 
+        ? 'http://localhost:8082' 
+        : 'http://hive-idm:8082',
+    MOVIES_BASE_URL: window.location.hostname === 'localhost' 
+        ? 'http://localhost:8080' 
+        : 'http://hive-app:8080',
+    get MOVIES_ENDPOINT() {
+        return `${this.MOVIES_BASE_URL}/v1/api/movies`;
+    }
 };
+
+// Override with environment variables if available (Docker)
+if (typeof window !== 'undefined' && window.ENV) {
+    if (window.ENV.AUTH_BASE_URL) {
+        API_CONFIG.AUTH_BASE_URL = window.ENV.AUTH_BASE_URL;
+    }
+    if (window.ENV.MOVIES_BASE_URL) {
+        API_CONFIG.MOVIES_BASE_URL = window.ENV.MOVIES_BASE_URL;
+    }
+}
 
 // Import SessionManager from login page
 // Session management utilities (same as login page)

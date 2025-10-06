@@ -1,8 +1,19 @@
-// API Configuration
+// API Configuration - Environment aware
 const API_CONFIG = {
-    AUTH_BASE_URL: 'http://localhost:8082',
-    AUTH_LOGIN_ENDPOINT: 'http://localhost:8082/auth/login'
+    AUTH_BASE_URL: window.location.hostname === 'localhost' 
+        ? 'http://localhost:8082' 
+        : 'http://hive-idm:8082',
+    get AUTH_LOGIN_ENDPOINT() {
+        return `${this.AUTH_BASE_URL}/auth/login`;
+    }
 };
+
+// Override with environment variables if available (Docker)
+if (typeof window !== 'undefined' && window.ENV) {
+    if (window.ENV.AUTH_BASE_URL) {
+        API_CONFIG.AUTH_BASE_URL = window.ENV.AUTH_BASE_URL;
+    }
+}
 
 // Session management utilities
 class SessionManager {

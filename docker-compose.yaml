@@ -39,8 +39,17 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
     restart: unless-stopped
+    depends_on:
+      - hive-app
+      - hive-idm
     networks:
       - hive-network
+    healthcheck:
+      test: ["CMD", "test", "-d", "/app/shared"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
   project-hive-web:
     build:
       context: .
@@ -53,6 +62,8 @@ services:
     environment:
       - NGINX_HOST=localhost
       - NGINX_PORT=80
+      - AUTH_BASE_URL=http://hive-idm:8082
+      - MOVIES_BASE_URL=http://hive-app:8080
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost/" ]
       interval: 30s
@@ -62,6 +73,9 @@ services:
     labels:
       - "app=project-hive-web"
       - "maintainer=project-hive"
+    depends_on:
+      - hive-app
+      - hive-idm
     networks:
       - hive-network
 networks:
