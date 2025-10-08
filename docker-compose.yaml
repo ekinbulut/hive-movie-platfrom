@@ -64,6 +64,8 @@ services:
       - NGINX_PORT=80
       - AUTH_BASE_URL=http://192.168.1.112:8082
       - MOVIES_BASE_URL=http://192.168.1.112:8080
+      - JELLYFIN_BASE_URL=http://192.168.1.112:8096
+      - JELLYFIN_ACCESS_TOKEN=your_jellyfin_token
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost/" ]
       interval: 30s

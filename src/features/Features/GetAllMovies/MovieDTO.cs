@@ -17,4 +17,6 @@ public class MovieDTO
     //get full image url
     public string? FullImageUrl => string.IsNullOrEmpty(Image) ? null : $"https://image.tmdb.org/t/p/w500{Image}";
     public DateTime? CreatedTime { get; set; }
+
+    public string? StreamId { get; set; }
 }

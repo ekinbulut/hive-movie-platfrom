@@ -117,8 +117,44 @@
                 </div>
             </div>
             <div class="modal-footer">
+                <button class="btn-primary" id="playMovieBtn" style="display: none;">▶️ Play Movie</button>
                 <button class="btn-secondary" id="closeModalBtn">Close</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Video Player Modal -->
+    <div id="videoPlayerModal" class="video-modal" style="display: none;">
+        <div class="video-modal-content">
+            <div class="video-modal-header">
+                <div class="video-controls-header">
+                    <button class="video-control-btn" id="minimizeVideoBtn" title="Minimize">−</button>
+                    <button class="video-control-btn" id="closeVideoBtn" title="Close">&times;</button>
+                </div>
+            </div>
+            
+            <div class="video-player-container">
+                <div id="videoLoadingState" class="video-loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Loading video...</p>
+                </div>
+                
+                <div id="videoErrorState" class="video-error-state" style="display: none;">
+                    <div class="error-icon">⚠️</div>
+                    <h3>Video Load Error</h3>
+                    <p id="videoErrorMessage">Failed to load video stream</p>
+                    <div class="video-error-actions">
+                        <button class="btn-primary" id="retryDirectBtn">Try Direct Stream</button>
+                        <button class="btn-secondary" id="retryTranscodeBtn">Try Transcoded</button>
+                    </div>
+                </div>
+                
+                <video id="jellyfinVideoPlayer" controls preload="metadata" crossorigin="anonymous" style="display: none;">
+                    <p>Your browser doesn't support HTML5 video.</p>
+                </video>
+            </div>
+            
+
         </div>
     </div>
 

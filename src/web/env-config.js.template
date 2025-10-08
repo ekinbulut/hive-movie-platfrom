@@ -1,5 +1,7 @@
 // Environment configuration for Docker deployment
 window.ENV = {
     AUTH_BASE_URL: '${AUTH_BASE_URL}',
-    MOVIES_BASE_URL: '${MOVIES_BASE_URL}'
+    MOVIES_BASE_URL: '${MOVIES_BASE_URL}',
+    JELLYFIN_BASE_URL: '${JELLYFIN_BASE_URL}',
+    JELLYFIN_ACCESS_TOKEN: '${JELLYFIN_ACCESS_TOKEN}'
 };

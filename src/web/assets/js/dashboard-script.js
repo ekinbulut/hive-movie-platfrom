@@ -241,6 +241,10 @@ class DashboardController {
         
         this.initializeElements();
         this.attachEventListeners();
+        
+        // Initialize video player controller
+        this.videoPlayerController = new VideoPlayerController();
+        
         this.checkAuthentication();
     }
 
@@ -464,10 +468,24 @@ class DashboardController {
             modalImage.style.display = 'none';
         }
 
+        // Show/hide play button based on streamId availability
+        const playBtn = document.getElementById('playMovieBtn');
+        if (movie.streamId && movie.streamId.trim() !== '') {
+            playBtn.style.display = 'inline-flex';
+            playBtn.onclick = () => this.playMovie(movie);
+        } else {
+            playBtn.style.display = 'none';
+        }
+
         this.movieModal.style.display = 'flex';
         setTimeout(() => {
             this.closeModalBtn.focus();
         }, 100);
+    }
+
+    playMovie(movie) {
+        this.closeMovieModal();
+        this.videoPlayerController.openVideoPlayer(movie);
     }
 
     closeMovieModal() {
@@ -550,13 +568,367 @@ class DashboardController {
     }
 }
 
+// Jellyfin API Configuration - Environment aware
+const JELLYFIN_CONFIG = {
+    baseUrl: window.location.hostname === 'localhost' 
+        ? 'http://192.168.1.112:8096' 
+        : 'http://jellyfin:8096',
+    accessToken: null, // Must be provided via environment variables
+    userId: null, // Will be set during authentication
+};
+
+// Override with environment variables if available (Docker)
+if (typeof window !== 'undefined' && window.ENV) {
+    if (window.ENV.JELLYFIN_BASE_URL) {
+        JELLYFIN_CONFIG.baseUrl = window.ENV.JELLYFIN_BASE_URL;
+    }
+    if (window.ENV.JELLYFIN_ACCESS_TOKEN) {
+        JELLYFIN_CONFIG.accessToken = window.ENV.JELLYFIN_ACCESS_TOKEN;
+    }
+}
+
+// Jellyfin API class
+class JellyfinAPI {
+    static async testConnection() {
+        // Validate that access token is provided
+        if (!JELLYFIN_CONFIG.accessToken) {
+            throw new Error('Jellyfin access token not configured. Please set JELLYFIN_ACCESS_TOKEN environment variable.');
+        }
+        
+        try {
+            // Try public endpoint first
+            let testUrl = `${JELLYFIN_CONFIG.baseUrl}/System/Info/Public`;
+            let response = await fetch(testUrl);
+            
+            if (!response.ok) {
+                // Try with API key
+                testUrl = `${JELLYFIN_CONFIG.baseUrl}/System/Info?api_key=${JELLYFIN_CONFIG.accessToken}`;
+                response = await fetch(testUrl);
+            }
+            
+            if (response.ok) {
+                const systemInfo = await response.json();
+                console.log('Connected to Jellyfin:', systemInfo.ServerName);
+                
+                // Try to get users
+                try {
+                    const usersResponse = await fetch(`${JELLYFIN_CONFIG.baseUrl}/Users?api_key=${JELLYFIN_CONFIG.accessToken}`);
+                    if (usersResponse.ok) {
+                        const users = await usersResponse.json();
+                        if (users.length > 0) {
+                            JELLYFIN_CONFIG.userId = users[0].Id;
+                        }
+                    }
+                } catch (error) {
+                    console.log('Could not get user info, continuing without user context');
+                }
+                
+                return { success: true, info: systemInfo };
+            } else {
+                throw new Error(`Server responded with ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Jellyfin connection failed:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    static async getMovieInfo(streamId) {
+        if (!JELLYFIN_CONFIG.accessToken) {
+            throw new Error('Jellyfin access token not configured');
+        }
+        
+        try {
+            const url = `${JELLYFIN_CONFIG.baseUrl}/Items/${streamId}?Fields=MediaStreams,MediaSources&api_key=${JELLYFIN_CONFIG.accessToken}`;
+            console.log(`Fetching movie info from: ${url}`);
+            
+            const response = await fetch(url);
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Movie info retrieved successfully:', data.Name || 'Unknown');
+                return data;
+            } else {
+                const errorText = await response.text();
+                console.error(`Movie info request failed: ${response.status} ${response.statusText}`, errorText);
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+        } catch (error) {
+            console.error('Error getting movie info:', error);
+            throw error;
+        }
+    }
+
+    static getDirectStreamUrl(streamId) {
+        if (!JELLYFIN_CONFIG.accessToken) {
+            throw new Error('Jellyfin access token not configured');
+        }
+        return `${JELLYFIN_CONFIG.baseUrl}/Videos/${streamId}/stream?Static=true&api_key=${JELLYFIN_CONFIG.accessToken}`;
+    }
+
+    static getTranscodeStreamUrl(streamId, quality = 'auto') {
+        if (!JELLYFIN_CONFIG.accessToken) {
+            throw new Error('Jellyfin access token not configured');
+        }
+        
+        let maxBitrate = '';
+        switch(quality) {
+            case '480p': maxBitrate = '&VideoBitRate=1000000'; break;
+            case '720p': maxBitrate = '&VideoBitRate=3000000'; break;
+            case '1080p': maxBitrate = '&VideoBitRate=8000000'; break;
+            default: maxBitrate = '';
+        }
+        
+        return `${JELLYFIN_CONFIG.baseUrl}/Videos/${streamId}/stream?AudioCodec=aac&VideoCodec=h264&Container=mp4${maxBitrate}&api_key=${JELLYFIN_CONFIG.accessToken}`;
+    }
+
+    static getSubtitleUrl(streamId, subtitleIndex) {
+        if (!JELLYFIN_CONFIG.accessToken) {
+            throw new Error('Jellyfin access token not configured');
+        }
+        return `${JELLYFIN_CONFIG.baseUrl}/Videos/${streamId}/Subtitles/${subtitleIndex}/Stream.vtt?api_key=${JELLYFIN_CONFIG.accessToken}`;
+    }
+}
+
+// Video Player Controller
+class VideoPlayerController {
+    constructor() {
+        this.initializeElements();
+        this.attachEventListeners();
+        this.currentMovie = null;
+        this.currentStreamId = null;
+        this.isPlaying = false;
+    }
+
+    initializeElements() {
+        // Video modal elements
+        this.videoModal = document.getElementById('videoPlayerModal');
+        this.videoPlayer = document.getElementById('jellyfinVideoPlayer');
+        this.videoLoadingState = document.getElementById('videoLoadingState');
+        this.videoErrorState = document.getElementById('videoErrorState');
+        
+        // Control buttons
+        this.closeVideoBtn = document.getElementById('closeVideoBtn');
+        this.minimizeVideoBtn = document.getElementById('minimizeVideoBtn');
+        this.retryDirectBtn = document.getElementById('retryDirectBtn');
+        this.retryTranscodeBtn = document.getElementById('retryTranscodeBtn');
+        
+
+    }
+
+    attachEventListeners() {
+        // Modal controls
+        this.closeVideoBtn?.addEventListener('click', () => this.closeVideoPlayer());
+        this.minimizeVideoBtn?.addEventListener('click', () => this.minimizeVideoPlayer());
+        
+
+        
+        // Error retry buttons
+        this.retryDirectBtn?.addEventListener('click', () => this.streamDirect());
+        this.retryTranscodeBtn?.addEventListener('click', () => this.streamTranscode());
+        
+
+        
+        // Video player events
+        if (this.videoPlayer) {
+            this.videoPlayer.addEventListener('loadstart', () => console.log('Loading started...'));
+            this.videoPlayer.addEventListener('loadeddata', () => console.log('Video data loaded'));
+            this.videoPlayer.addEventListener('loadedmetadata', () => {
+                console.log(`Video loaded: ${this.videoPlayer.videoWidth}x${this.videoPlayer.videoHeight}, Duration: ${this.formatTime(this.videoPlayer.duration)}`);
+                this.hideLoadingState();
+                this.videoPlayer.style.display = 'block';
+            });
+            this.videoPlayer.addEventListener('error', (e) => {
+                this.showErrorState(`Error: ${e.target.error?.message || 'Unknown error'}`);
+            });
+            this.videoPlayer.addEventListener('play', () => this.isPlaying = true);
+            this.videoPlayer.addEventListener('pause', () => this.isPlaying = false);
+        }
+        
+        // Modal close on background click
+        this.videoModal?.addEventListener('click', (e) => {
+            if (e.target === this.videoModal) this.closeVideoPlayer();
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (this.videoModal?.style.display === 'flex') {
+                switch(e.key) {
+                    case 'Escape':
+                        this.closeVideoPlayer();
+                        break;
+                    case ' ':
+                        e.preventDefault();
+                        if (this.isPlaying) {
+                            this.videoPlayer.pause();
+                        } else {
+                            this.videoPlayer.play();
+                        }
+                        break;
+
+                }
+            }
+        });
+    }
+
+    async openVideoPlayer(movie) {
+        this.currentMovie = movie;
+        this.currentStreamId = movie.streamId;
+        
+        console.log('Opening video player for movie:', {
+            name: movie.name,
+            streamId: movie.streamId,
+            movie: movie
+        });
+        
+        // Show modal
+        this.videoModal.style.display = 'flex';
+        
+        // Show loading state initially
+        this.showLoadingState();
+        
+        // Test Jellyfin connection and load movie
+        console.log('Connecting to Jellyfin server...');
+        
+        const connectionResult = await JellyfinAPI.testConnection();
+        if (!connectionResult.success) {
+            this.showErrorState(`Failed to connect to Jellyfin: ${connectionResult.error}`);
+            return;
+        }
+        
+        console.log(`Connected to ${connectionResult.info.ServerName || 'Jellyfin'}`);
+        
+        // Try to get movie info from Jellyfin, but don't fail if it doesn't work
+        try {
+            const movieInfo = await JellyfinAPI.getMovieInfo(this.currentStreamId);
+            console.log('Movie info loaded. Starting direct stream...');
+        } catch (error) {
+            console.warn('Could not load movie info from Jellyfin:', error.message);
+            console.log('Connected to Jellyfin. Starting direct stream...');
+        }
+        
+        // Automatically start direct streaming
+        this.streamDirect();
+    }
+
+    closeVideoPlayer() {
+        if (this.videoPlayer) {
+            this.videoPlayer.pause();
+            this.videoPlayer.src = '';
+        }
+        this.videoModal.style.display = 'none';
+        this.currentMovie = null;
+        this.currentStreamId = null;
+        this.isPlaying = false;
+    }
+
+    minimizeVideoPlayer() {
+        // For now, just hide the modal but keep playing
+        this.videoModal.style.display = 'none';
+        // Could be extended to create a mini player
+    }
+
+    showLoadingState() {
+        this.videoLoadingState.style.display = 'flex';
+        this.videoErrorState.style.display = 'none';
+        this.videoPlayer.style.display = 'none';
+    }
+
+    hideLoadingState() {
+        this.videoLoadingState.style.display = 'none';
+    }
+
+    showReadyState() {
+        this.videoLoadingState.style.display = 'none';
+        this.videoErrorState.style.display = 'none';
+        this.videoPlayer.style.display = 'none';
+        
+        // Show a ready state message in the player area
+        this.showReadyMessage();
+    }
+
+    showReadyMessage() {
+        // Create or update ready state element
+        let readyState = document.getElementById('videoReadyState');
+        if (!readyState) {
+            readyState = document.createElement('div');
+            readyState.id = 'videoReadyState';
+            readyState.className = 'video-ready-state';
+            readyState.innerHTML = `
+                <div class="ready-icon">🎬</div>
+                <h3>Ready to Play</h3>
+                <p>Choose your streaming option:</p>
+                <div class="ready-actions">
+                    <button class="btn-primary ready-btn" onclick="window.dashboardInstance.videoPlayerController.streamDirect()">
+                        🎯 Direct Stream
+                        <small>Original quality, faster start</small>
+                    </button>
+                    <button class="btn-primary ready-btn" onclick="window.dashboardInstance.videoPlayerController.streamTranscode()">
+                        ⚙️ Transcoded Stream  
+                        <small>Optimized for your device</small>
+                    </button>
+                </div>
+            `;
+            this.videoPlayer.parentNode.appendChild(readyState);
+        }
+        readyState.style.display = 'flex';
+    }
+
+    hideReadyState() {
+        const readyState = document.getElementById('videoReadyState');
+        if (readyState) {
+            readyState.style.display = 'none';
+        }
+    }
+
+    showErrorState(message) {
+        this.videoErrorState.style.display = 'flex';
+        this.videoLoadingState.style.display = 'none';
+        this.videoPlayer.style.display = 'none';
+        this.hideReadyState();
+        document.getElementById('videoErrorMessage').textContent = message;
+    }
+
+    streamDirect() {
+        if (!this.currentStreamId) return;
+        
+        this.hideReadyState();
+        this.showLoadingState();
+        console.log('Loading direct stream...');
+        
+        const streamUrl = JellyfinAPI.getDirectStreamUrl(this.currentStreamId);
+        console.log('Starting direct stream with URL:', streamUrl);
+        this.videoPlayer.src = streamUrl;
+        this.videoPlayer.load();
+    }
+
+
+
+
+
+
+
+
+
+
+
+    formatTime(seconds) {
+        if (isNaN(seconds)) return '00:00';
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+}
+
 // Initialize dashboard when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Dashboard initializing...');
-    new DashboardController();
+    window.dashboardInstance = new DashboardController();
 });
 
 // Export for debugging
 window.DashboardController = DashboardController;
 window.SessionManager = SessionManager;
 window.MoviesAPI = MoviesAPI;
+window.JellyfinAPI = JellyfinAPI;
+window.VideoPlayerController = VideoPlayerController;

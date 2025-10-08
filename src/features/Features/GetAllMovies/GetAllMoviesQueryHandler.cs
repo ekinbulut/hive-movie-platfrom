@@ -28,8 +28,11 @@ public class GetAllMoviesQueryHandler : IQueryHandler<GetAllMoviesQuery, GetMovi
                 FileSize = m.FileSize.ToHumanReadableSize(),
                 Image = m.Image,
                 CreatedTime = m.CreatedTime,
+                StreamId = m.JellyFinId
                 
-            }).OrderByDescending(x=> x.CreatedTime).ToList(),
+            })
+                .OrderByDescending(x=> x.CreatedTime)
+                .ToList(),
             PageSize = query.PageSize,
             PageNumber = query.PageNumber,
         });
