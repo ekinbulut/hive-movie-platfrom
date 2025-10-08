@@ -30,6 +30,8 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 # Set default environment variables
 ENV AUTH_BASE_URL=http://hive-idm:8082
 ENV MOVIES_BASE_URL=http://hive-app:8080
+ENV JELLYFIN_BASE_URL=http://192.168.1.112:8096
+ENV JELLYFIN_ACCESS_TOKEN=""
 
 # Expose port 80
 EXPOSE 80
