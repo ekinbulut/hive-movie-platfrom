@@ -476,9 +476,11 @@ class DashboardController {
         // Control elements
         this.searchInput = document.getElementById('searchInput');
         this.searchBtn = document.getElementById('searchBtn');
+        this.searchClear = document.getElementById('searchClear');
         this.sortSelect = document.getElementById('sortSelect');
         this.yearFilter = document.getElementById('yearFilter');
         this.pageSizeSelect = document.getElementById('pageSizeSelect');
+        this.filtersContent = document.getElementById('filtersContent');
         
         // View is always grid (list view removed)
         
@@ -510,8 +512,21 @@ class DashboardController {
         
         // Search
         const debouncedSearch = Utils.debounce(() => this.handleSearch(), 500);
-        this.searchInput.addEventListener('input', debouncedSearch);
+        this.searchInput.addEventListener('input', (e) => {
+            // Show/hide clear button
+            if (this.searchClear) {
+                this.searchClear.style.display = e.target.value.trim() ? 'block' : 'none';
+            }
+            debouncedSearch();
+        });
         this.searchBtn.addEventListener('click', () => this.handleSearch());
+        
+        // Search clear button
+        if (this.searchClear) {
+            this.searchClear.addEventListener('click', () => this.clearSearch());
+        }
+        
+
         
         // Controls
         this.sortSelect.addEventListener('change', () => this.handleSortChange());
@@ -871,7 +886,7 @@ class DashboardController {
             movieImageDiv.innerHTML = '<div class="placeholder">🎬<br><small>No Image</small></div>';
         }
 
-        // Movie card now only contains the poster image
+        // Only show the image - no additional info
         card.appendChild(movieImageDiv);
 
         return card;
@@ -954,9 +969,25 @@ class DashboardController {
 
     handleSearch() {
         this.searchQuery = this.searchInput.value.trim();
+        // Show/hide clear button
+        if (this.searchClear) {
+            this.searchClear.style.display = this.searchQuery ? 'block' : 'none';
+        }
         // Search is done client-side, just re-render
         this.renderMovies();
     }
+
+    clearSearch() {
+        this.searchInput.value = '';
+        this.searchQuery = '';
+        if (this.searchClear) {
+            this.searchClear.style.display = 'none';
+        }
+        this.renderMovies();
+        this.searchInput.focus();
+    }
+
+
 
     handlePageSizeChange() {
         this.pageSize = parseInt(this.pageSizeSelect.value);

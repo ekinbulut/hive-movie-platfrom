@@ -11,12 +11,15 @@
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">
-                <h2>🎬 Project Hive</h2>
+                <div class="brand-icon">🎬</div>
+                <h2>Project Hive</h2>
             </div>
             <div class="nav-menu">
                 <div class="user-info">
                     <span class="welcome-text">Welcome back!</span>
-                    <button class="logout-btn" id="logoutBtn">Logout</button>
+                    <button class="logout-btn" id="logoutBtn" title="Logout">
+                        <span class="logout-icon">⏻</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -27,40 +30,60 @@
         <div class="dashboard-container">
             <!-- Header Section -->
             <div class="dashboard-header">
-                <h1>Movies Dashboard</h1>
-                <p>Browse and manage your movie collection</p>
-            </div>
-
-            <!-- Controls Section -->
-            <div class="controls-section">
-                <div class="search-container">
-                    <input type="text" id="searchInput" placeholder="Search movies..." class="search-input">
-                    <button class="search-btn" id="searchBtn">🔍</button>
+                <div class="header-content">
+                    <h1>Movie Library</h1>
+                    <p>Discover, browse and enjoy your movie collection</p>
                 </div>
                 
-                <div class="filter-controls">
-                    <select id="sortSelect" class="sort-select">
-                        <option value="name-asc">Name (A-Z)</option>
-                        <option value="name-desc">Name (Z-A)</option>
-                        <option value="fileSize-desc">File Size (Large to Small)</option>
-                        <option value="fileSize-asc">File Size (Small to Large)</option>
-                        <option value="createdTime-desc" selected>Created Date (Newest First)</option>
-                        <option value="createdTime-asc">Created Date (Oldest First)</option>
-                        <option value="releaseDate-desc">Release Year (Newest First)</option>
-                        <option value="releaseDate-asc">Release Year (Oldest First)</option>
-                    </select>
-                    
-                    <select id="yearFilter" class="year-filter">
-                        <option value="">All Years</option>
-                        <!-- Year options will be populated dynamically -->
-                    </select>
-                    
-                    <select id="pageSizeSelect" class="page-size-select">
-                        <option value="10">10 per page</option>
-                        <option value="25" selected>25 per page</option>
-                        <option value="50">50 per page</option>
-                        <option value="100">100 per page</option>
-                    </select>
+                <!-- Search Section -->
+                <div class="search-section">
+                    <div class="search-container">
+                        <div class="search-input-wrapper">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="searchInput" placeholder="Search for movies, actors, directors..." class="search-input">
+                            <button class="search-clear" id="searchClear" style="display: none;">✕</button>
+                        </div>
+                        <button class="search-btn" id="searchBtn" title="Search">🔍</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="filters-section">
+                <div class="filters-container">
+                    <div class="filters-content" id="filtersContent">
+                        <div class="select-wrapper">
+                            <select id="sortSelect" class="filter-select">
+                                <option value="name-asc">Name (A-Z)</option>
+                                <option value="name-desc">Name (Z-A)</option>
+                                <option value="fileSize-desc">File Size (Large to Small)</option>
+                                <option value="fileSize-asc">File Size (Small to Large)</option>
+                                <option value="createdTime-desc" selected>Created Date (Newest First)</option>
+                                <option value="createdTime-asc">Created Date (Oldest First)</option>
+                                <option value="releaseDate-desc">Release Year (Newest First)</option>
+                                <option value="releaseDate-asc">Release Year (Oldest First)</option>
+                            </select>
+                            <span class="select-arrow">▼</span>
+                        </div>
+                        
+                        <div class="select-wrapper">
+                            <select id="yearFilter" class="filter-select">
+                                <option value="">All Years</option>
+                                <!-- Year options will be populated dynamically -->
+                            </select>
+                            <span class="select-arrow">▼</span>
+                        </div>
+                        
+                        <div class="select-wrapper">
+                            <select id="pageSizeSelect" class="filter-select">
+                                <option value="10">10 per page</option>
+                                <option value="25" selected>25 per page</option>
+                                <option value="50">50 per page</option>
+                                <option value="100">100 per page</option>
+                            </select>
+                            <span class="select-arrow">▼</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
