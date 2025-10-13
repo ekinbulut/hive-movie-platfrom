@@ -7,54 +7,210 @@
     <link rel="stylesheet" href="../assets/css/styles.css">
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-card">
-            <div class="login-header">
-                <h1>Welcome Back</h1>
-                <p>Sign in to your account</p>
+    <div class="auth-container">
+        <!-- Left Side - Auth Forms -->
+        <div class="auth-forms-side">
+            <div class="auth-card">
+                <!-- Auth Toggle -->
+                <div class="auth-toggle">
+                    <button class="toggle-btn active" data-form="login">Sign In</button>
+                    <button class="toggle-btn" data-form="register">Sign Up</button>
+                </div>
+
+                <!-- Login Form -->
+                <div class="auth-form login-form-container active" id="loginFormContainer">
+                    <div class="auth-header">
+                        <h1>Welcome Back</h1>
+                        <p>Sign in to your account to continue</p>
+                    </div>
+                    
+                    <form id="loginForm" class="auth-form-content">
+                        <div class="form-group">
+                            <label for="loginUsername">Username</label>
+                            <input 
+                                type="text" 
+                                id="loginUsername" 
+                                name="username" 
+                                required 
+                                autocomplete="username"
+                                placeholder="Enter your username"
+                            >
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="loginPassword">Password</label>
+                            <input 
+                                type="password" 
+                                id="loginPassword" 
+                                name="password" 
+                                required 
+                                autocomplete="current-password"
+                                placeholder="Enter your password"
+                            >
+                        </div>
+                        
+                        <button type="submit" class="primary-button" id="loginButton">
+                            <span class="button-text">Sign In</span>
+                            <span class="loading-spinner" style="display: none;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                                </svg>
+                            </span>
+                        </button>
+                        
+                        <div id="loginErrorMessage" class="error-message" style="display: none;"></div>
+                    </form>
+                </div>
+
+                <!-- Register Form -->
+                <div class="auth-form register-form-container" id="registerFormContainer">
+                    <div class="auth-header">
+                        <h1>Join Project Hive</h1>
+                        <p>Create your account to get started</p>
+                    </div>
+                    
+                    <form id="registerForm" class="auth-form-content">
+                        <div class="form-group">
+                            <label for="registerUsername">Username</label>
+                            <input 
+                                type="text" 
+                                id="registerUsername" 
+                                name="username" 
+                                required 
+                                autocomplete="username"
+                                placeholder="Choose a username"
+                                minlength="3"
+                            >
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="registerEmail">Email</label>
+                            <input 
+                                type="email" 
+                                id="registerEmail" 
+                                name="email" 
+                                required 
+                                autocomplete="email"
+                                placeholder="Enter your email address"
+                            >
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="registerPassword">Password</label>
+                            <input 
+                                type="password" 
+                                id="registerPassword" 
+                                name="password" 
+                                required 
+                                autocomplete="new-password"
+                                placeholder="Create a strong password"
+                                minlength="6"
+                            >
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="registerConfirmPassword">Confirm Password</label>
+                            <input 
+                                type="password" 
+                                id="registerConfirmPassword" 
+                                name="confirmPassword" 
+                                required 
+                                autocomplete="new-password"
+                                placeholder="Confirm your password"
+                                minlength="6"
+                            >
+                        </div>
+                        
+                        <button type="submit" class="primary-button" id="registerButton">
+                            <span class="button-text">Create Account</span>
+                            <span class="loading-spinner" style="display: none;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                                </svg>
+                            </span>
+                        </button>
+                        
+                        <div id="registerErrorMessage" class="error-message" style="display: none;"></div>
+                        <div id="registerSuccessMessage" class="success-message" style="display: none;"></div>
+                    </form>
+                </div>
             </div>
-            
-            <form id="loginForm" class="login-form">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input 
-                        type="text" 
-                        id="username" 
-                        name="username" 
-                        required 
-                        autocomplete="username"
-                        placeholder="Enter your username"
-                    >
-                </div>
-                
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        required 
-                        autocomplete="current-password"
-                        placeholder="Enter your password"
-                    >
-                </div>
-                
-                <button type="submit" class="login-button" id="loginButton">
-                    <span class="button-text">Sign In</span>
-                    <span class="loading-spinner" style="display: none;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 12a9 9 0 11-6.219-8.56"/>
+        </div>
+
+        <!-- Right Side - Branding -->
+        <div class="branding-side">
+            <div class="branding-content">
+                <div class="brand-logo">
+                    <div class="logo-icon">
+                        <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+                            <rect width="60" height="60" rx="12" fill="url(#gradient)"/>
+                            <path d="M20 25h20v2H20v-2zm0 6h20v2H20v-2zm0 6h14v2H20v-2z" fill="white"/>
+                            <circle cx="45" cy="20" r="8" fill="white" opacity="0.9"/>
+                            <defs>
+                                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#3b82f6"/>
+                                    <stop offset="100%" style="stop-color:#1d4ed8"/>
+                                </linearGradient>
+                            </defs>
                         </svg>
-                    </span>
-                </button>
+                    </div>
+                    <h2>Project Hive</h2>
+                </div>
                 
-                <div id="errorMessage" class="error-message" style="display: none;"></div>
-            </form>
+                <div class="brand-description">
+                    <h3>Collaborate. Create. Succeed.</h3>
+                    <p>Join thousands of teams who trust Project Hive to manage their projects, collaborate seamlessly, and achieve their goals faster than ever before.</p>
+                </div>
+                
+                <div class="brand-features">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4>Team Collaboration</h4>
+                            <p>Work together seamlessly with real-time updates and smart notifications.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <path d="M9 9h6v6H9z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4>Smart Project Management</h4>
+                            <p>Organize tasks, track progress, and meet deadlines with intelligent automation.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                <path d="M2 17l10 5 10-5"></path>
+                                <path d="M2 12l10 5 10-5"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4>Scalable Solutions</h4>
+                            <p>From small teams to enterprise organizations, we scale with your needs.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Environment configuration for Docker -->
     <script src="../env-config.js"></script>
-    <script src="../assets/js/script.js"></script>
+    <script src="../assets/js/auth-combined.js"></script>
 </body>
 </html>

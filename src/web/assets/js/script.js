@@ -5,6 +5,9 @@ const API_CONFIG = {
         : 'http://hive-idm:8082',
     get AUTH_LOGIN_ENDPOINT() {
         return `${this.AUTH_BASE_URL}/auth/login`;
+    },
+    get AUTH_REGISTER_ENDPOINT() {
+        return `${this.AUTH_BASE_URL}/auth/register`;
     }
 };
 
