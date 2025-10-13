@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Threading;
 using Domain.Interfaces;
 using Infrastructure.Integration.Services.JellyFin.Models;
 using Microsoft.Extensions.Configuration;
@@ -6,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Integration.Services.JellyFin;
 
-public class JellyFinService(HttpClient httpClient, IConfiguration configuration, ILogger<JellyFinService> logger)
+public class JellyFinService(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<JellyFinService> logger)
     : IJellyFinService
 {
     private readonly string _baseUrl = configuration["JellyFin:BaseUrl"]
@@ -17,10 +18,16 @@ public class JellyFinService(HttpClient httpClient, IConfiguration configuration
                                       ?? Environment.GetEnvironmentVariable("JELLYFIN_ACCESS_TOKEN")
                                       ?? throw new ArgumentNullException("JellyFin:ApiKey not configured");
 
+    private static readonly SemaphoreSlim _throttle = new SemaphoreSlim(2); // Limit to 2 concurrent requests
+    private static readonly TimeSpan _throttleDelay = TimeSpan.FromMilliseconds(500); // Optional delay between requests
+
     public async Task<string?> GetMovieIdByNameAsync(string movieName, int? year = null)
     {
+        await _throttle.WaitAsync();
         try
         {
+            await Task.Delay(_throttleDelay); // Throttle delay
+            var httpClient = httpClientFactory.CreateClient();
             var url =
                 $"{_baseUrl}/Search/Hints?api_key={_apiKey}&SearchTerm={Uri.EscapeDataString(movieName)}&IncludeItemTypes=Movie&Limit=10";
 
@@ -48,6 +55,10 @@ public class JellyFinService(HttpClient httpClient, IConfiguration configuration
         {
             logger.LogError(ex, "Error fetching movie ID from JellyFin for movie: {MovieName}", movieName);
             return null;
+        }
+        finally
+        {
+            _throttle.Release();
         }
     }
 }
