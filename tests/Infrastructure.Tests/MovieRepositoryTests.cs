@@ -182,7 +182,7 @@ public class MovieRepositoryTests
     
         var repository = new MovieRepository(context);
     
-        var result = repository.GetAllMovies(2, 1);
+        var result = repository.GetAllMoviesAsync(2, 1).GetAwaiter().GetResult();
     
         Assert.Single(result);
         Assert.Equal("Movie 2", result[0].Name);
@@ -204,7 +204,7 @@ public class MovieRepositoryTests
     
         var repository = new MovieRepository(context);
     
-        var result = repository.GetAllMovies(3, 2);
+        var result = repository.GetAllMoviesAsync(3, 2).GetAwaiter().GetResult();
     
         Assert.Empty(result);
     }
