@@ -182,6 +182,205 @@ class MoviesAPI {
             throw error;
         }
     }
+
+    static async getFilteredMovies(year = null, pageNumber = 1, pageSize = 25) {
+        const tokenData = SessionManager.getAccessToken();
+        if (!tokenData) {
+            throw new Error('No authentication token found');
+        }
+
+        console.log('Fetching filtered movies:', { year, pageNumber, pageSize });
+
+        try {
+            const response = await fetch(`${API_CONFIG.MOVIES_BASE_URL}/v1/api/movies/filter`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `${tokenData.tokenType} ${tokenData.accessToken}`
+                },
+                body: JSON.stringify({
+                    year: year || null,
+                    pageNumber,
+                    pageSize
+                })
+            });
+
+            console.log('Filter API response status:', response.status);
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // Token expired or invalid
+                    SessionManager.clearAccessToken();
+                    throw new Error('Authentication expired. Please login again.');
+                }
+
+                let errorMessage = 'Failed to fetch filtered movies';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorData.error || errorMessage;
+                } catch (e) {
+                    errorMessage = response.statusText || errorMessage;
+                }
+                
+                throw new Error(`${errorMessage} (Status: ${response.status})`);
+            }
+
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                console.error('Failed to parse filter API response as JSON:', jsonError);
+                throw new Error('Server returned invalid data format. Please check your API server.');
+            }
+            
+            // Validate API response structure
+            if (!data || typeof data !== 'object') {
+                throw new Error('Server returned empty or invalid data. Please check your API server and try again.');
+            }
+            
+            // Ensure movies array exists, default to empty array if null/undefined
+            if (!Array.isArray(data.movies)) {
+                console.warn('Filter API response missing movies array, defaulting to empty array');
+                data.movies = [];
+            }
+            
+            console.log('Filtered movies fetched successfully:', {
+                moviesInResponse: data.movies.length,
+                totalMovies: data.total || 0,
+                pageNumber: data.pageNumber || pageNumber,
+                pageSize: data.pageSize || pageSize,
+                year: year
+            });
+
+            // Log API response structure and sample movie data
+            console.log('Filter API Response structure:', {
+                hasMovies: !!data.movies,
+                moviesCount: data.movies ? data.movies.length : 0,
+                hasTotal: !!data.total,
+                total: data.total,
+                hasPageNumber: !!data.pageNumber,
+                pageNumber: data.pageNumber,
+                hasPageSize: !!data.pageSize,
+                pageSize: data.pageSize
+            });
+
+            if (data.movies.length > 0) {
+                console.log('Sample filtered movie data:', {
+                    id: data.movies[0].id,
+                    name: data.movies[0].name,
+                    hasImage: !!data.movies[0].image,
+                    hasFullImageUrl: !!data.movies[0].fullImageUrl,
+                    fullImageUrl: data.movies[0].fullImageUrl,
+                    createdTime: data.movies[0].createdTime,
+                    hasCreatedTime: !!data.movies[0].createdTime,
+                    releaseDate: data.movies[0].releaseDate,
+                    hasReleaseDate: !!data.movies[0].releaseDate
+                });
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Filter API error:', error);
+            
+            if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                throw new Error(`Cannot connect to movies filter API server. Please ensure the server is running on ${API_CONFIG.MOVIES_BASE_URL.replace('http://', '')}`);
+            }
+            
+            throw error;
+        }
+    }
+
+    static async getFilters() {
+        const tokenData = SessionManager.getAccessToken();
+        if (!tokenData) {
+            throw new Error('No authentication token found');
+        }
+
+        console.log('Fetching filters...');
+
+        try {
+            const response = await fetch(`${API_CONFIG.MOVIES_BASE_URL}/v1/api/filters`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `${tokenData.tokenType} ${tokenData.accessToken}`
+                }
+            });
+
+            console.log('Filters API response status:', response.status);
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // Token expired or invalid
+                    SessionManager.clearAccessToken();
+                    throw new Error('Authentication expired. Please login again.');
+                }
+
+                let errorMessage = 'Failed to fetch filters';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorData.error || errorMessage;
+                } catch (e) {
+                    errorMessage = response.statusText || errorMessage;
+                }
+                
+                throw new Error(`${errorMessage} (Status: ${response.status})`);
+            }
+
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                console.error('Failed to parse filters API response as JSON:', jsonError);
+                throw new Error('Server returned invalid data format. Please check your API server.');
+            }
+            
+            // Validate API response structure
+            if (!data || typeof data !== 'object') {
+                throw new Error('Server returned empty or invalid filters data.');
+            }
+            
+            // Validate filters structure
+            if (!data.filters || typeof data.filters !== 'object') {
+                console.warn('Filters API response missing filters object, using empty filters');
+                data.filters = {};
+            }
+
+            // Ensure years array exists
+            if (!Array.isArray(data.filters.years)) {
+                console.warn('Filters API response missing years array, defaulting to empty array');
+                data.filters.years = [];
+            }
+            
+            console.log('Filters fetched successfully:', {
+                hasFilters: !!data.filters,
+                yearsCount: data.filters.years ? data.filters.years.length : 0,
+                yearsRange: data.filters.years && data.filters.years.length > 0 
+                    ? `${Math.min(...data.filters.years)} - ${Math.max(...data.filters.years)}`
+                    : 'No years available'
+            });
+
+            // Log sample years data
+            if (data.filters.years && data.filters.years.length > 0) {
+                console.log('Available years:', {
+                    total: data.filters.years.length,
+                    latest: data.filters.years.slice(0, 5),
+                    oldest: data.filters.years.slice(-5),
+                    allYears: data.filters.years
+                });
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Filters API error:', error);
+            
+            if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                throw new Error(`Cannot connect to filters API server. Please ensure the server is running on ${API_CONFIG.MOVIES_BASE_URL.replace('http://', '')}`);
+            }
+            
+            throw error;
+        }
+    }
 }
 
 // Utility functions
@@ -258,6 +457,7 @@ class DashboardController {
         this.searchQuery = '';
         this.sortBy = 'createdTime-desc'; // Default to newest first
         this.selectedYear = ''; // Default to all years
+        this.yearFilterPopulated = false; // Track if static year filter is populated
         
         this.initializeElements();
         this.attachEventListeners();
@@ -361,14 +561,38 @@ class DashboardController {
             return;
         }
         
+        // Initialize year filter independently
+        this.initializeYearFilter();
+        
         this.loadMovies();
+    }
+
+    async initializeYearFilter() {
+        if (!this.yearFilterPopulated) {
+            try {
+                await this.populateYearFilter();
+                this.yearFilterPopulated = true;
+            } catch (error) {
+                console.error('Failed to initialize year filter:', error);
+                // Continue without year filter if it fails
+            }
+        }
     }
 
     async loadMovies() {
         this.showLoadingState();
         
         try {
-            const data = await MoviesAPI.getMovies(this.currentPage, this.pageSize);
+            let data;
+            
+            // Use filter endpoint if year is selected, otherwise use regular endpoint
+            if (this.selectedYear) {
+                console.log(`Loading movies for year: ${this.selectedYear}`);
+                data = await MoviesAPI.getFilteredMovies(parseInt(this.selectedYear), this.currentPage, this.pageSize);
+            } else {
+                console.log('Loading all movies');
+                data = await MoviesAPI.getMovies(this.currentPage, this.pageSize);
+            }
             
             // Validate response data
             if (!data) {
@@ -389,7 +613,6 @@ class DashboardController {
             
             this.renderMovies();
             this.updatePagination(data);
-            this.populateYearFilter();
             
             if (this.movies.length === 0) {
                 this.showEmptyState();
@@ -522,39 +745,53 @@ class DashboardController {
         return 0;
     }
 
-    populateYearFilter() {
-        if (!this.yearFilter || !Array.isArray(this.movies)) {
+    async populateYearFilter() {
+        if (!this.yearFilter) {
             return;
         }
 
-        // Extract unique years from movies
-        const years = new Set();
-        this.movies.forEach(movie => {
-            if (movie.releaseDate) {
-                const year = movie.releaseDate.toString();
-                if (year && year !== '0') {
-                    years.add(year);
-                }
+        try {
+            // Fetch available years from API
+            const filtersData = await MoviesAPI.getFilters();
+            const availableYears = filtersData.filters.years || [];
+
+            // Sort years in descending order (newest first)
+            const sortedYears = availableYears
+                .map(year => parseInt(year))
+                .filter(year => !isNaN(year))
+                .sort((a, b) => b - a);
+
+            // Clear existing options (except "All Years")
+            while (this.yearFilter.children.length > 1) {
+                this.yearFilter.removeChild(this.yearFilter.lastChild);
             }
-        });
 
-        // Convert to sorted array (newest first)
-        const sortedYears = Array.from(years).sort((a, b) => parseInt(b) - parseInt(a));
+            // Add year options
+            sortedYears.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year.toString();
+                option.textContent = year.toString();
+                this.yearFilter.appendChild(option);
+            });
 
-        // Clear existing options (except "All Years")
-        while (this.yearFilter.children.length > 1) {
-            this.yearFilter.removeChild(this.yearFilter.lastChild);
+            console.log('Year filter populated with API years:', {
+                totalYears: sortedYears.length,
+                yearRange: sortedYears.length > 0 
+                    ? `${sortedYears[sortedYears.length - 1]} - ${sortedYears[0]}`
+                    : 'No years',
+                years: sortedYears
+            });
+
+        } catch (error) {
+            console.error('Failed to populate year filter:', error);
+            
+            // Fallback to empty filter on error
+            while (this.yearFilter.children.length > 1) {
+                this.yearFilter.removeChild(this.yearFilter.lastChild);
+            }
+            
+            console.log('Year filter cleared due to API error');
         }
-
-        // Add year options
-        sortedYears.forEach(year => {
-            const option = document.createElement('option');
-            option.value = year;
-            option.textContent = year;
-            this.yearFilter.appendChild(option);
-        });
-
-        console.log('Year filter populated with years:', sortedYears);
     }
 
     renderMovies() {
@@ -574,7 +811,7 @@ class DashboardController {
                 return false;
             }
             
-            // Apply search filter
+            // Apply search filter (client-side)
             if (this.searchQuery) {
                 const movieName = Utils.formatMovieName(movie).toLowerCase();
                 const filePath = (movie.filePath || '').toLowerCase();
@@ -583,11 +820,7 @@ class DashboardController {
                 if (!matchesSearch) return false;
             }
             
-            // Apply year filter
-            if (this.selectedYear) {
-                const movieYear = movie.releaseDate ? movie.releaseDate.toString() : '';
-                if (movieYear !== this.selectedYear) return false;
-            }
+            // Year filter is now handled server-side, no client-side filtering needed
             
             return true;
         });
@@ -721,10 +954,7 @@ class DashboardController {
 
     handleSearch() {
         this.searchQuery = this.searchInput.value.trim();
-        // Reset to first page when searching
-        this.currentPage = 1;
-        // If search is done server-side, reload movies
-        // If search is done client-side, just re-render
+        // Search is done client-side, just re-render
         this.renderMovies();
     }
 
@@ -743,9 +973,8 @@ class DashboardController {
         this.selectedYear = this.yearFilter.value;
         // Reset to first page when filtering
         this.currentPage = 1;
-        // If filtering is done server-side, reload movies
-        // If filtering is done client-side, just re-render
-        this.renderMovies(); // Re-render with new filter
+        // Reload movies using appropriate endpoint (filter or regular)
+        this.loadMovies();
     }
 
     goToPreviousPage() {

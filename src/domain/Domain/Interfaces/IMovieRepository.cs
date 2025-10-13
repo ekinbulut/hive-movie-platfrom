@@ -15,4 +15,5 @@ public interface IMovieRepository
     Task<int> GetTotalMoviesCountAsync();
     Task<List<Movie>> GetMoviesByFilterAsync(int? queryYear, int pageNumber, int pageSize);
     Task<int> GetTotalMoviesCountByFilterAsync(int? queryYear);
+    Task<List<int>> GetFiltersAsync();
 }

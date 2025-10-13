@@ -68,6 +68,16 @@ public class MovieRepository(HiveDbContext context) : IMovieRepository
             .CountAsync();
     }
 
+    public async Task<List<int>> GetFiltersAsync()
+    {
+        return await context.Movies
+            .Where(m => m.ReleaseDate.HasValue && m.ReleaseDate > 0)
+            .Select(m => m.ReleaseDate.Value)
+            .Distinct()
+            .OrderByDescending(y => y)
+            .ToListAsync();
+    }
+
     // Add a method to get all movies with pagination
     public async Task<List<Movie>> GetAllMoviesAsync(int pageNumber, int pageSize)
     {
