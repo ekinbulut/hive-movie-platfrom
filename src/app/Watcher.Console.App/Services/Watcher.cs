@@ -69,17 +69,20 @@ public class Watcher : IDisposable
         _watcher.IncludeSubdirectories = includeSubdirectories;
 
         _watcher.Created += OnFileCreated;
-        _watcher.Deleted += OnFileDeleted;
-        _watcher.Renamed += (s, e) => Renamed?.Invoke(s, e);
+        // _watcher.Changed += OnFileChanged;
+        // _watcher.Deleted += OnFileDeleted;
+        _watcher.Renamed += (s, e) =>
+        {
+            Renamed?.Invoke(s, e);
+            // If the new name is a valid, allowed file and exists, process it
+            if (_fileSystemService.FileExists(e.FullPath) && IsAllowedFile(e.FullPath) && ShouldProcessFile(e.FullPath))
+            {
+                ProcessFileAsync(e.FullPath);
+            }
+        };
         _watcher.Error += (s, e) => Error?.Invoke(s, e);
     }
-
-    // Convenience constructor for production use
-    // public Watcher(string path, string filter = "*.*", bool includeSubdirectories = true, string[]? allowedExtensions = null)
-    //     : this(path, new FileSystemWatcherFactory(), new FileSystemService(), new NullLogger(), filter, includeSubdirectories, allowedExtensions)
-    // {
-    // }
-
+    
     private bool IsAllowedFile(string filePath)
     {
         var extension = Path.GetExtension(filePath);
@@ -130,19 +133,21 @@ public class Watcher : IDisposable
     // {
     //     Changed?.Invoke(sender, e);
     //
-    //     _logger.LogInformation("File changed: " + e.FullPath);
+    //     _logger.LogInformation($"File changed: {e.FullPath}");
     //     if (ShouldProcessFile(e.FullPath) && _fileSystemService.FileExists(e.FullPath) && IsAllowedFile(e.FullPath))
     //     {
     //         ProcessFileAsync(e.FullPath);
     //     }
     // }
-
-    private void OnFileDeleted(object? sender, FileSystemEventArgs e)
-    {
-        Changed?.Invoke(sender, e);
-        // Remove from throttle dictionary when file is deleted
-        _lastProcessedTimes.TryRemove(e.FullPath, out _);
-    }
+    //
+    // private void OnFileDeleted(object? sender, FileSystemEventArgs e)
+    // {
+    //     // Treat deletes as a change for upstream consumers
+    //     Changed?.Invoke(sender, e);
+    //     _logger.LogInformation($"File deleted: {e.FullPath}");
+    //     // Remove from throttle dictionary when file is deleted
+    //     _lastProcessedTimes.TryRemove(e.FullPath, out _);
+    // }
 
     private async void ProcessFileAsync(string filePath)
     {
@@ -232,7 +237,12 @@ public class Watcher : IDisposable
         return $"{number:n1} {suffixes[counter]}";
     }
 
-    public void Start() => _watcher.Start();
+    public void Start()
+    {
+        // Do an initial scan so we have a baseline and emit existing files
+        PerformInitialScan();
+        _watcher.Start();
+    }
 
     public void Stop() => _watcher.Stop();
 

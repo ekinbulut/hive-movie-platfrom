@@ -117,11 +117,20 @@ var defaultCorrelationId = Guid.NewGuid().ToString("N");
 
 
 
-using var watcher = new Watcher.Console.App.Services.Watcher(
-    watcherArgs.FolderToWatch,
+var watcher = new Watcher.Console.App.Services.Watcher(
+    path: watcherArgs.FolderToWatch,
     watcherFactory,
     fileSystemService,
-    logger);
+    logger: logger,                       
+    filter: "*.*",
+    includeSubdirectories: true,
+    allowedExtensions: new[] { ".mkv", ".mov", ".mp4" } // optional
+);
+
+//
+// watcher.Changed += (s, e) => Console.WriteLine($"[Changed] {e.FullPath}");
+// watcher.Renamed += (s, e) => Console.WriteLine($"[Renamed] {e.OldFullPath} -> {e.FullPath}");
+// watcher.Error   += (s, e) => Console.WriteLine($"[Error] {e.GetException().Message}");
 
 watcher.FileContentDiscovered += (s, e) =>
 {
@@ -140,7 +149,7 @@ watcher.FileContentDiscovered += (s, e) =>
 };
    
 watcher.Start();
-watcher.PerformInitialScan();
+// watcher.PerformInitialScan();
 
 var cancellationTokenSource = new CancellationTokenSource();
 
