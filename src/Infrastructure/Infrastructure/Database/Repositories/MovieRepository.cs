@@ -52,6 +52,12 @@ public class MovieRepository : IMovieRepository
             _context.SaveChanges();
         }
     }
+
+    public int GetTotalMoviesCount()
+    {
+        return _context.Movies.Count();
+    }
+
     // Add a method to get all movies with pagination
     public List<Movie> GetAllMovies(int pageNumber, int pageSize)
     {

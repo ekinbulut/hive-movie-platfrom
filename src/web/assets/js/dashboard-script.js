@@ -139,12 +139,25 @@ class MoviesAPI {
             }
             
             console.log('Movies fetched successfully:', {
-                totalMovies: data.movies.length,
-                pageNumber: data.pageNumber || 1,
-                pageSize: data.pageSize || this.pageSize
+                moviesInResponse: data.movies.length,
+                totalMovies: data.total || 0,
+                pageNumber: data.pageNumber || this.currentPage,
+                pageSize: data.pageSize || this.pageSize,
+                currentPage: this.currentPage
             });
 
-            // Log sample movie data to verify fields including createdTime and releaseDate
+            // Log API response structure and sample movie data
+            console.log('API Response structure:', {
+                hasMovies: !!data.movies,
+                moviesCount: data.movies ? data.movies.length : 0,
+                hasTotal: !!data.total,
+                total: data.total,
+                hasPageNumber: !!data.pageNumber,
+                pageNumber: data.pageNumber,
+                hasPageSize: !!data.pageSize,
+                pageSize: data.pageSize
+            });
+
             if (data.movies.length > 0) {
                 console.log('Sample movie data:', {
                     name: data.movies[0].name,
@@ -241,6 +254,7 @@ class DashboardController {
         this.currentView = 'grid';
         this.movies = [];
         this.totalMovies = 0;
+        this.totalPages = 0;
         this.searchQuery = '';
         this.sortBy = 'createdTime-desc'; // Default to newest first
         this.selectedYear = ''; // Default to all years
@@ -675,20 +689,42 @@ class DashboardController {
     }
 
     updatePagination(data) {
-        const hasNextPage = data.movies && data.movies.length === this.pageSize;
+        // Use total count from API response for accurate pagination
+        const totalMovies = data.total || 0;
+        const totalPages = Math.ceil(totalMovies / this.pageSize);
+        
         const hasPrevPage = this.currentPage > 1;
+        const hasNextPage = this.currentPage < totalPages;
 
         this.prevBtn.disabled = !hasPrevPage;
         this.nextBtn.disabled = !hasNextPage;
         
-        this.pageInfo.textContent = `Page ${this.currentPage}`;
-        this.pagination.style.display = 'flex';
+        // Update page info to show current page and total pages
+        this.pageInfo.textContent = `Page ${this.currentPage} of ${totalPages} (${totalMovies} movies)`;
+        this.pagination.style.display = totalPages > 1 ? 'flex' : 'none';
+        
+        // Store total for other methods that might need it
+        this.totalMovies = totalMovies;
+        this.totalPages = totalPages;
+        
+        console.log('Pagination updated:', {
+            currentPage: this.currentPage,
+            totalPages: totalPages,
+            totalMovies: totalMovies,
+            pageSize: this.pageSize,
+            hasPrevPage: hasPrevPage,
+            hasNextPage: hasNextPage
+        });
     }
 
     // View functionality removed - always uses grid view
 
     handleSearch() {
         this.searchQuery = this.searchInput.value.trim();
+        // Reset to first page when searching
+        this.currentPage = 1;
+        // If search is done server-side, reload movies
+        // If search is done client-side, just re-render
         this.renderMovies();
     }
 
@@ -705,6 +741,10 @@ class DashboardController {
 
     handleYearFilterChange() {
         this.selectedYear = this.yearFilter.value;
+        // Reset to first page when filtering
+        this.currentPage = 1;
+        // If filtering is done server-side, reload movies
+        // If filtering is done client-side, just re-render
         this.renderMovies(); // Re-render with new filter
     }
 

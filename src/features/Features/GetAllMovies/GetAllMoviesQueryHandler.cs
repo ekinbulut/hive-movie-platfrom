@@ -4,18 +4,13 @@ using Features.Extensions;
 
 namespace Features.GetAllMovies;
 
-public class GetAllMoviesQueryHandler : IQueryHandler<GetAllMoviesQuery, GetMovieResponse>
+public class GetAllMoviesQueryHandler(IMovieRepository movieRepository)
+    : IQueryHandler<GetAllMoviesQuery, GetMovieResponse>
 {
-    private readonly IMovieRepository _movieRepository;
-
-    public GetAllMoviesQueryHandler(IMovieRepository movieRepository)
-    {
-        _movieRepository = movieRepository;
-    }
-
     public async Task<GetMovieResponse> HandleAsync(GetAllMoviesQuery query, CancellationToken cancellationToken = default)
     {
-        var movies = _movieRepository.GetAllMovies(query.PageNumber, query.PageSize);
+        var movies = movieRepository.GetAllMovies(query.PageNumber, query.PageSize);
+        var total = movieRepository.GetTotalMoviesCount();
         
         return await Task.FromResult(new GetMovieResponse()
         {
@@ -36,6 +31,7 @@ public class GetAllMoviesQueryHandler : IQueryHandler<GetAllMoviesQuery, GetMovi
                 .ToList(),
             PageSize = query.PageSize,
             PageNumber = query.PageNumber,
+            Total = total
         });
     }
 }

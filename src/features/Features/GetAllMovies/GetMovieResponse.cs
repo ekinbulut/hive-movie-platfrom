@@ -7,6 +7,7 @@ public class GetMovieResponse
     public int PageSize { get; set; }
     public int PageNumber { get; set; }
     
+    public int Total { get; set; }
     public GetMovieResponse()
     {
         Movies = new List<MovieDTO>();
