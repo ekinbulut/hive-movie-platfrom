@@ -9,9 +9,13 @@ namespace Infrastructure.Integration.Services;
 
 public class TmdbApiService : ITmdbApiService
 {
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly HttpClient _httpClient;
+    
+    private static readonly SemaphoreSlim _throttle = new SemaphoreSlim(2); // Limit to 2 concurrent requests
+    private static readonly TimeSpan _throttleDelay = TimeSpan.FromMilliseconds(500); // Optional delay between requests
 
-    public TmdbApiService(HttpClient httpClient, IConfiguration configuration)
+    public TmdbApiService(IHttpClientFactory httpClientFactory, IConfiguration configuration)
     {
         var tmdbSection = configuration.GetSection("TmdbApi");
         if (tmdbSection == null)
@@ -21,8 +25,9 @@ public class TmdbApiService : ITmdbApiService
         
         var baseUrl = tmdbSection["BaseUrl"]; 
         
-        _httpClient = httpClient;
+        _httpClientFactory = httpClientFactory;
         var bearerToken = configuration["TmdbApi:BearerToken"];
+        _httpClient = _httpClientFactory.CreateClient();
         _httpClient.BaseAddress = new Uri(baseUrl);
         _httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", bearerToken);
@@ -32,24 +37,56 @@ public class TmdbApiService : ITmdbApiService
 
     public async Task<TmdbMovieDto> GetMovieByIdAsync(int movieId)
     {
-        var response = await _httpClient.GetAsync($"movie/{movieId}");
-        response.EnsureSuccessStatusCode();
-        var json = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<TmdbMovieDto>(json);
+        await _throttle.WaitAsync();
+        try
+        {
+            await Task.Delay(_throttleDelay); // Throttle delay
+            
+            var response = await _httpClient.GetAsync($"movie/{movieId}");
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<TmdbMovieDto>(json);
+        }
+        catch (Exception e)
+        {
+            throw new Exception($"Error fetching movie with ID {movieId} from TMDb", e);
+        }
+        finally
+        {
+            _throttle.Release();
+        }
     }
 
     public async Task<TmdbSearchResultDto> SearchMoviesAsync(string query, int year = 0, int page = 1)
     {
-        var queryParams = $"search/movie?query={Uri.EscapeDataString(query)}&include_adult=false&language=en-US&page={page}";
-        
-        if (year > 0)
+        await _throttle.WaitAsync();
+
+        try
         {
-            queryParams += $"&year={year}";
+            await Task.Delay(_throttleDelay); // Throttle delay
+
+            var queryParams =
+                $"search/movie?query={Uri.EscapeDataString(query)}&include_adult=false&language=en-US&page={page}";
+
+            if (year > 0)
+            {
+                queryParams += $"&year={year}";
+            }
+
+            var response = await _httpClient.GetAsync(queryParams);
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<TmdbSearchResultDto>(json);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+        finally
+        {
+            _throttle.Release();
         }
 
-        var response = await _httpClient.GetAsync(queryParams);
-        response.EnsureSuccessStatusCode();
-        var json = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<TmdbSearchResultDto>(json);
     }
 }
