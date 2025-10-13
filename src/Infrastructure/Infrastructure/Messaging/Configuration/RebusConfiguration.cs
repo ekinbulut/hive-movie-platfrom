@@ -1,6 +1,7 @@
 using Infrastructure.Messaging.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 using Rebus.Config;
+using Rebus.Logging;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Send;
 using Rebus.Retry.Simple;
@@ -17,7 +18,7 @@ public static class RebusConfiguration
         int maxParallelism = 4)
     {
         services.AddRebus(configure => configure
-            .Logging(l => l.ColoredConsole())
+            .Logging(l => l.Use(new NullLoggerFactory()))
             .Transport(t => t.UseRabbitMq(amqpConnectionString, inputQueue))
             .Options(o =>
             {

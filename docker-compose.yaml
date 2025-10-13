@@ -38,6 +38,8 @@ services:
       - "/home/user/shared/Plex/Shared Movies:/app/shared"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - JELLYFIN_BASE_URL=http://192.168.1.112:8096
+      - JELLYFIN_ACCESS_TOKEN=""
     restart: unless-stopped
     depends_on:
       - hive-app
@@ -65,7 +67,7 @@ services:
       - AUTH_BASE_URL=http://192.168.1.112:8082
       - MOVIES_BASE_URL=http://192.168.1.112:8080
       - JELLYFIN_BASE_URL=http://192.168.1.112:8096
-      - JELLYFIN_ACCESS_TOKEN=your_jellyfin_token
+      - JELLYFIN_ACCESS_TOKEN=""
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost/" ]
       interval: 30s

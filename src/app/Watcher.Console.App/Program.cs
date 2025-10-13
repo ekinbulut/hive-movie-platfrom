@@ -9,6 +9,7 @@
  */
 
 using Domain.Interfaces;
+using Humanizer;
 using Infrastructure.Database.Extensions;
 using Infrastructure.Integration.Services;
 using Infrastructure.Integration.Services.JellyFin;
@@ -30,7 +31,6 @@ Console.Title = title;
 
 //write the app version and name
 var appVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-Console.WriteLine($"{title} v{appVersion}");
 
 // --- Host/DI bootstrap -------------------------------------------------------
 var builder = Host.CreateDefaultBuilder(args)
@@ -72,6 +72,13 @@ var builder = Host.CreateDefaultBuilder(args)
 using var host = builder.Build();
 await host.StartAsync();
 
+// Create watcher with proper DI services to enable buffer management
+var watcherFactory = host.Services.GetRequiredService<IFileSystemWatcherFactory>();
+var fileSystemService = host.Services.GetRequiredService<IFileSystemService>();
+var logger = host.Services.GetRequiredService<ILogger<Program>>();
+
+logger.LogInformation($"{title} v{appVersion}");
+
 WatcherArguments watcherArgs;
 try
 {
@@ -79,27 +86,27 @@ try
 }
 catch (Exception ex)
 {
-    Console.WriteLine(ex.Message);
+    logger.LogError(ex.Message);
     return;
 }
 
 if (watcherArgs.ShowHelp)
 {
     //write possible arguments
-    Console.WriteLine($"{title} - A simple file system watcher.");
-    Console.WriteLine("Options:");
-    Console.WriteLine("  --watch or -w <folder_to_watch>   Specifies the folder to watch.");
-    Console.WriteLine("  --help                      Displays this help message.");
-    Console.WriteLine();
-    Console.WriteLine("Usage: Watcher.Console.App --watch <folder_to_watch>");
+    logger.LogInformation($"{title} - A simple file system watcher.");
+    logger.LogInformation("Options:");
+    logger.LogInformation("  --watch or -w <folder_to_watch>   Specifies the folder to watch.");
+    logger.LogInformation("  --help                      Displays this help message.");
+    logger.LogInformation("");
+    logger.LogInformation("Usage: Watcher.Console.App --watch <folder_to_watch>");
     return;
 }
 
-Console.WriteLine();
+logger.LogInformation("");
 
-Console.WriteLine($"Watching folder: {watcherArgs.FolderToWatch}");
-Console.WriteLine("Press 'q' to quit or Ctrl+C to exit.");
-Console.WriteLine();
+logger.LogInformation($"Watching folder: {watcherArgs.FolderToWatch}");
+logger.LogInformation("Press 'q' to quit or Ctrl+C to exit.");
+logger.LogInformation("");
 
 // Resolve Rebus bus through DI
 var bus = host.Services.GetRequiredService<Rebus.Bus.IBus>();
@@ -108,10 +115,7 @@ await bus.Subscribe<FileFoundEvent>();
 // --- Define a lightweight publish DTO that implements your abstraction -------
 var defaultCorrelationId = Guid.NewGuid().ToString("N");
 
-// Create watcher with proper DI services to enable buffer management
-var watcherFactory = host.Services.GetRequiredService<IFileSystemWatcherFactory>();
-var fileSystemService = host.Services.GetRequiredService<IFileSystemService>();
-var logger = host.Services.GetRequiredService<IConsoleLogger>();
+
 
 using var watcher = new Watcher.Console.App.Services.Watcher(
     watcherArgs.FolderToWatch,
@@ -119,14 +123,10 @@ using var watcher = new Watcher.Console.App.Services.Watcher(
     fileSystemService,
     logger);
 
-watcher.Changed += (s, e) =>
-    Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {e.ChangeType}: {e.FullPath}");
-watcher.Renamed += (s, e) =>
-    Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Renamed: {e.OldFullPath} -> {e.FullPath}");
-
 watcher.FileContentDiscovered += (s, e) =>
 {
-    Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] File Discovered: {e.Path} (Size: {e.Size} bytes)");
+    
+    logger.LogInformation($"File Discovered: {e.Path} (Size: {e.Size }  bytes)");
 
     // THIS IS OVER ENGINEERING !!
     var fileEvent = new FileFoundEvent
@@ -139,24 +139,22 @@ watcher.FileContentDiscovered += (s, e) =>
     bus.Publish(fileEvent);
 };
    
-
-watcher.PerformInitialScan();
-
 watcher.Start();
+watcher.PerformInitialScan();
 
 var cancellationTokenSource = new CancellationTokenSource();
 
 Console.CancelKeyPress += (sender, e) =>
 {
     e.Cancel = true;
-    Console.WriteLine("\nShutting down watcher...");
+    logger.LogWarning("\nShutting down watcher...");
     cancellationTokenSource.Cancel();
 };
 
 // Check if running in interactive mode
 if (Environment.UserInteractive && !Console.IsInputRedirected)
 {
-    Console.WriteLine("Press 'q' to quit or Ctrl+C to exit.");
+    // logger.LogInformation("Press 'q' to quit or Ctrl+C to exit.");
     
     // Run the interactive loop in a background task
     _ = Task.Run(async () =>
@@ -168,7 +166,7 @@ if (Environment.UserInteractive && !Console.IsInputRedirected)
                 var key = Console.ReadKey(true);
                 if (key.KeyChar == 'q' || key.KeyChar == 'Q')
                 {
-                    Console.WriteLine("\nShutting down watcher...");
+                    logger.LogWarning("\nShutting down watcher...");
                     cancellationTokenSource.Cancel();
                     break;
                 }
@@ -182,7 +180,7 @@ if (Environment.UserInteractive && !Console.IsInputRedirected)
 }
 else
 {
-    Console.WriteLine("Running in non-interactive mode. Use Ctrl+C to exit.");
+    logger.LogInformation("Running in non-interactive mode. Use Ctrl+C to exit.");
 }
 
 // Wait for cancellation
@@ -195,7 +193,7 @@ catch (TaskCanceledException)
     // Expected when cancellation is requested
 }
 
-Console.WriteLine("Stopping watcher...");
+logger.LogWarning("Stopping watcher...");
 watcher.Stop();
 
 // Stop Rebus/Host

@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
 using System.IO;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Watcher.Console.App.Abstracts;
 using Watcher.Console.App.Factories;
 using Watcher.Console.App.Models;
@@ -10,7 +12,7 @@ public class Watcher : IDisposable
 {
     private readonly IFileSystemWatcherWrapper _watcher;
     private readonly IFileSystemService _fileSystemService;
-    private readonly IConsoleLogger _logger;
+    private readonly ILogger _logger;
     private readonly string _rootPath;
     private readonly HashSet<string> _allowedExtensions;
     
@@ -33,7 +35,7 @@ public class Watcher : IDisposable
         string path,
         IFileSystemWatcherFactory watcherFactory,
         IFileSystemService fileSystemService,
-        IConsoleLogger logger,
+        ILogger logger,
         string filter = "*.*",
         bool includeSubdirectories = true,
         string[]? allowedExtensions = null)
@@ -67,17 +69,16 @@ public class Watcher : IDisposable
         _watcher.IncludeSubdirectories = includeSubdirectories;
 
         _watcher.Created += OnFileCreated;
-        _watcher.Changed += OnFileChanged;
         _watcher.Deleted += OnFileDeleted;
         _watcher.Renamed += (s, e) => Renamed?.Invoke(s, e);
         _watcher.Error += (s, e) => Error?.Invoke(s, e);
     }
 
     // Convenience constructor for production use
-    public Watcher(string path, string filter = "*.*", bool includeSubdirectories = true, string[]? allowedExtensions = null)
-        : this(path, new FileSystemWatcherFactory(), new FileSystemService(), new ConsoleLogger(), filter, includeSubdirectories, allowedExtensions)
-    {
-    }
+    // public Watcher(string path, string filter = "*.*", bool includeSubdirectories = true, string[]? allowedExtensions = null)
+    //     : this(path, new FileSystemWatcherFactory(), new FileSystemService(), new NullLogger(), filter, includeSubdirectories, allowedExtensions)
+    // {
+    // }
 
     private bool IsAllowedFile(string filePath)
     {
@@ -119,23 +120,22 @@ public class Watcher : IDisposable
 
     private void OnFileCreated(object? sender, FileSystemEventArgs e)
     {
-        Changed?.Invoke(sender, e);
-
         if (ShouldProcessFile(e.FullPath) && _fileSystemService.FileExists(e.FullPath) && IsAllowedFile(e.FullPath))
         {
             ProcessFileAsync(e.FullPath);
         }
     }
 
-    private void OnFileChanged(object? sender, FileSystemEventArgs e)
-    {
-        Changed?.Invoke(sender, e);
-
-        if (ShouldProcessFile(e.FullPath) && _fileSystemService.FileExists(e.FullPath) && IsAllowedFile(e.FullPath))
-        {
-            ProcessFileAsync(e.FullPath);
-        }
-    }
+    // private void OnFileChanged(object? sender, FileSystemEventArgs e)
+    // {
+    //     Changed?.Invoke(sender, e);
+    //
+    //     _logger.LogInformation("File changed: " + e.FullPath);
+    //     if (ShouldProcessFile(e.FullPath) && _fileSystemService.FileExists(e.FullPath) && IsAllowedFile(e.FullPath))
+    //     {
+    //         ProcessFileAsync(e.FullPath);
+    //     }
+    // }
 
     private void OnFileDeleted(object? sender, FileSystemEventArgs e)
     {
@@ -150,6 +150,8 @@ public class Watcher : IDisposable
         {
             // Add a small delay to ensure file operations are complete
             await Task.Delay(100);
+            
+            _logger.LogInformation($"Processing file: {filePath}");
             
             if (!_fileSystemService.FileExists(filePath))
                 return;
@@ -166,7 +168,7 @@ public class Watcher : IDisposable
         }
         catch (Exception ex)
         {
-            _logger.WriteLine($"Error processing file {filePath}: {ex.Message}");
+            _logger.LogError($"Error processing file {filePath}: {ex.Message}");
         }
     }
 
@@ -189,10 +191,10 @@ public class Watcher : IDisposable
             TotalDirectoryCount = Directories.Count;
             TotalSizeBytes = Files.Sum(f => f.Length);
 
-            _logger.WriteLine($"Initial scan completed (filtered for: {string.Join(", ", _allowedExtensions)}):");
-            _logger.WriteLine($"  - Total files: {TotalFileCount}");
-            _logger.WriteLine($"  - Total directories: {TotalDirectoryCount}");
-            _logger.WriteLine($"  - Total size: {FormatBytes(TotalSizeBytes)}");
+            _logger.LogInformation($"Initial scan completed (filtered for: {string.Join(", ", _allowedExtensions)}):");
+            _logger.LogInformation($" - Total files: {TotalFileCount}");
+            _logger.LogInformation($" - Total directories: {TotalDirectoryCount}");
+            _logger.LogInformation($" - Total size: {FormatBytes(TotalSizeBytes)}");
 
             foreach (var file in Files)
             {
@@ -209,11 +211,11 @@ public class Watcher : IDisposable
         }
         catch (UnauthorizedAccessException ex)
         {
-            _logger.WriteLine($"Access denied during scan: {ex.Message}");
+            _logger.LogInformation($"Access denied during scan: {ex.Message}");
         }
         catch (Exception ex)
         {
-            _logger.WriteLine($"Error during folder scan: {ex.Message}");
+            _logger.LogInformation($"Error during folder scan: {ex.Message}");
         }
     }
 
@@ -247,10 +249,10 @@ public class Watcher : IDisposable
 
     public void PrintSummary()
     {
-        _logger.WriteLine($"Filtered Extensions: {string.Join(", ", _allowedExtensions)}");
-        _logger.WriteLine($"Watching directory: {_rootPath}");
-        _logger.WriteLine($"Total files: {TotalFileCount}");
-        _logger.WriteLine($"Total directories: {TotalDirectoryCount}");
-        _logger.WriteLine($"Total size: {FormatBytes(TotalSizeBytes)}");
+        _logger.LogInformation($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Filtered Extensions: {string.Join(", ", _allowedExtensions)}");
+        _logger.LogInformation($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Watching directory: {_rootPath}");
+        _logger.LogInformation($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Total files: {TotalFileCount}");
+        _logger.LogInformation($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Total directories: {TotalDirectoryCount}");
+        _logger.LogInformation($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Total size: {FormatBytes(TotalSizeBytes)}");
     }
 }
