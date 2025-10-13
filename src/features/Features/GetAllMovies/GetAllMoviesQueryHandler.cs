@@ -28,7 +28,8 @@ public class GetAllMoviesQueryHandler : IQueryHandler<GetAllMoviesQuery, GetMovi
                 FileSize = m.FileSize.ToHumanReadableSize(),
                 Image = m.Image,
                 CreatedTime = m.CreatedTime,
-                StreamId = m.JellyFinId
+                StreamId = m.JellyFinId,
+                ReleaseDate = m.ReleaseDate
                 
             })
                 .OrderByDescending(x=> x.CreatedTime)

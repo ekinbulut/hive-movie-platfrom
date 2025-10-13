@@ -39,6 +39,22 @@
                 </div>
                 
                 <div class="filter-controls">
+                    <select id="sortSelect" class="sort-select">
+                        <option value="name-asc">Name (A-Z)</option>
+                        <option value="name-desc">Name (Z-A)</option>
+                        <option value="fileSize-desc">File Size (Large to Small)</option>
+                        <option value="fileSize-asc">File Size (Small to Large)</option>
+                        <option value="createdTime-desc" selected>Created Date (Newest First)</option>
+                        <option value="createdTime-asc">Created Date (Oldest First)</option>
+                        <option value="releaseDate-desc">Release Year (Newest First)</option>
+                        <option value="releaseDate-asc">Release Year (Oldest First)</option>
+                    </select>
+                    
+                    <select id="yearFilter" class="year-filter">
+                        <option value="">All Years</option>
+                        <!-- Year options will be populated dynamically -->
+                    </select>
+                    
                     <select id="pageSizeSelect" class="page-size-select">
                         <option value="10">10 per page</option>
                         <option value="25" selected>25 per page</option>

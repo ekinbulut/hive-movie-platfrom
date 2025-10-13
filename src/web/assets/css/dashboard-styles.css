@@ -198,6 +198,8 @@ body {
     gap: 1rem;
 }
 
+.sort-select,
+.year-filter,
 .page-size-select {
     padding: 0.75rem 1rem;
     border: 2px solid #e1e5e9;
@@ -206,8 +208,15 @@ body {
     font-size: 0.9rem;
     cursor: pointer;
     outline: none;
+    min-width: 120px;
 }
 
+.sort-select {
+    min-width: 180px;
+}
+
+.sort-select:focus,
+.year-filter:focus,
 .page-size-select:focus {
     border-color: #667eea;
 }

@@ -144,13 +144,17 @@ class MoviesAPI {
                 pageSize: data.pageSize || this.pageSize
             });
 
-            // Log sample movie data to verify fullImageUrl field
+            // Log sample movie data to verify fields including createdTime and releaseDate
             if (data.movies.length > 0) {
                 console.log('Sample movie data:', {
                     name: data.movies[0].name,
                     hasImage: !!data.movies[0].image,
                     hasFullImageUrl: !!data.movies[0].fullImageUrl,
-                    fullImageUrl: data.movies[0].fullImageUrl
+                    fullImageUrl: data.movies[0].fullImageUrl,
+                    createdTime: data.movies[0].createdTime,
+                    hasCreatedTime: !!data.movies[0].createdTime,
+                    releaseDate: data.movies[0].releaseDate,
+                    hasReleaseDate: !!data.movies[0].releaseDate
                 });
             }
 
@@ -238,9 +242,12 @@ class DashboardController {
         this.movies = [];
         this.totalMovies = 0;
         this.searchQuery = '';
+        this.sortBy = 'createdTime-desc'; // Default to newest first
+        this.selectedYear = ''; // Default to all years
         
         this.initializeElements();
         this.attachEventListeners();
+        this.initializeUI();
         
         // Initialize video player controller
         this.videoPlayerController = new VideoPlayerController();
@@ -255,6 +262,8 @@ class DashboardController {
         // Control elements
         this.searchInput = document.getElementById('searchInput');
         this.searchBtn = document.getElementById('searchBtn');
+        this.sortSelect = document.getElementById('sortSelect');
+        this.yearFilter = document.getElementById('yearFilter');
         this.pageSizeSelect = document.getElementById('pageSizeSelect');
         
         // View is always grid (list view removed)
@@ -291,6 +300,8 @@ class DashboardController {
         this.searchBtn.addEventListener('click', () => this.handleSearch());
         
         // Controls
+        this.sortSelect.addEventListener('change', () => this.handleSortChange());
+        this.yearFilter.addEventListener('change', () => this.handleYearFilterChange());
         this.pageSizeSelect.addEventListener('change', () => this.handlePageSizeChange());
         
         // View is always grid (list view removed)
@@ -315,6 +326,18 @@ class DashboardController {
                 this.closeMovieModal();
             }
         });
+    }
+
+    initializeUI() {
+        // Set default sort value
+        if (this.sortSelect) {
+            this.sortSelect.value = this.sortBy;
+        }
+        
+        // Set default year filter value
+        if (this.yearFilter) {
+            this.yearFilter.value = this.selectedYear;
+        }
     }
 
     checkAuthentication() {
@@ -352,6 +375,7 @@ class DashboardController {
             
             this.renderMovies();
             this.updatePagination(data);
+            this.populateYearFilter();
             
             if (this.movies.length === 0) {
                 this.showEmptyState();
@@ -374,6 +398,151 @@ class DashboardController {
         }
     }
 
+    sortMovies(movies) {
+        if (!Array.isArray(movies) || movies.length === 0) {
+            return movies;
+        }
+
+        const [field, direction] = this.sortBy.split('-');
+        const isAscending = direction === 'asc';
+        
+        return movies.sort((a, b) => {
+            let valueA, valueB;
+            
+            switch (field) {
+                case 'name':
+                    valueA = Utils.formatMovieName(a).toLowerCase();
+                    valueB = Utils.formatMovieName(b).toLowerCase();
+                    break;
+                    
+                case 'fileSize':
+                    valueA = this.getNumericFileSize(a.fileSize);
+                    valueB = this.getNumericFileSize(b.fileSize);
+                    break;
+                    
+                case 'createdTime':
+                    // Use createdTime from API (ISO format: "2025-10-06T14:57:04.146903Z")
+                    if (a.createdTime && b.createdTime) {
+                        valueA = new Date(a.createdTime);
+                        valueB = new Date(b.createdTime);
+                        console.log('Sorting by createdTime:', {
+                            movieA: Utils.formatMovieName(a),
+                            createdTimeA: a.createdTime,
+                            dateA: valueA.toISOString(),
+                            movieB: Utils.formatMovieName(b),
+                            createdTimeB: b.createdTime,
+                            dateB: valueB.toISOString()
+                        });
+                    } else {
+                        // Fallback to filename-based sorting if no created time
+                        console.log('createdTime not available, falling back to name-based sorting');
+                        valueA = Utils.formatMovieName(a).toLowerCase();
+                        valueB = Utils.formatMovieName(b).toLowerCase();
+                    }
+                    break;
+                    
+                case 'releaseDate':
+                    // Use releaseDate from API (year format: 2025)
+                    valueA = a.releaseDate ? parseInt(a.releaseDate) : 0;
+                    valueB = b.releaseDate ? parseInt(b.releaseDate) : 0;
+                    console.log('Sorting by releaseDate:', {
+                        movieA: Utils.formatMovieName(a),
+                        releaseDateA: a.releaseDate,
+                        movieB: Utils.formatMovieName(b),
+                        releaseDateB: b.releaseDate
+                    });
+                    break;
+                    
+                default:
+                    valueA = Utils.formatMovieName(a).toLowerCase();
+                    valueB = Utils.formatMovieName(b).toLowerCase();
+            }
+            
+            // Handle Date objects
+            if (valueA instanceof Date && valueB instanceof Date) {
+                return isAscending ? valueA - valueB : valueB - valueA;
+            }
+            
+            // Handle numbers
+            if (typeof valueA === 'number' && typeof valueB === 'number') {
+                return isAscending ? valueA - valueB : valueB - valueA;
+            }
+            
+            // Handle strings
+            if (typeof valueA === 'string' && typeof valueB === 'string') {
+                return isAscending ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
+            }
+            
+            return 0;
+        });
+    }
+
+    getNumericFileSize(fileSize) {
+        // Handle null, undefined, empty string
+        if (!fileSize || fileSize === '') return 0;
+        
+        // If fileSize is already a number, return it
+        if (typeof fileSize === 'number') {
+            return fileSize;
+        }
+        
+        // If fileSize is a formatted string like "1.2 GB", parse it
+        if (typeof fileSize === 'string') {
+            const match = fileSize.match(/^([\d.]+)\s*([KMGT]?B?)$/i);
+            if (match) {
+                const value = parseFloat(match[1]);
+                const unit = match[2].toUpperCase();
+                
+                const multipliers = {
+                    'B': 1,
+                    'KB': 1024,
+                    'MB': 1024 * 1024,
+                    'GB': 1024 * 1024 * 1024,
+                    'TB': 1024 * 1024 * 1024 * 1024
+                };
+                
+                return value * (multipliers[unit] || 1);
+            }
+        }
+        
+        return 0;
+    }
+
+    populateYearFilter() {
+        if (!this.yearFilter || !Array.isArray(this.movies)) {
+            return;
+        }
+
+        // Extract unique years from movies
+        const years = new Set();
+        this.movies.forEach(movie => {
+            if (movie.releaseDate) {
+                const year = movie.releaseDate.toString();
+                if (year && year !== '0') {
+                    years.add(year);
+                }
+            }
+        });
+
+        // Convert to sorted array (newest first)
+        const sortedYears = Array.from(years).sort((a, b) => parseInt(b) - parseInt(a));
+
+        // Clear existing options (except "All Years")
+        while (this.yearFilter.children.length > 1) {
+            this.yearFilter.removeChild(this.yearFilter.lastChild);
+        }
+
+        // Add year options
+        sortedYears.forEach(year => {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            this.yearFilter.appendChild(option);
+        });
+
+        console.log('Year filter populated with years:', sortedYears);
+    }
+
     renderMovies() {
         this.moviesContainer.innerHTML = '';
         
@@ -391,15 +560,28 @@ class DashboardController {
                 return false;
             }
             
-            if (!this.searchQuery) return true;
+            // Apply search filter
+            if (this.searchQuery) {
+                const movieName = Utils.formatMovieName(movie).toLowerCase();
+                const filePath = (movie.filePath || '').toLowerCase();
+                const matchesSearch = movieName.includes(this.searchQuery.toLowerCase()) || 
+                                    filePath.includes(this.searchQuery.toLowerCase());
+                if (!matchesSearch) return false;
+            }
             
-            const movieName = Utils.formatMovieName(movie).toLowerCase();
-            const filePath = (movie.filePath || '').toLowerCase();
-            return movieName.includes(this.searchQuery.toLowerCase()) || 
-                   filePath.includes(this.searchQuery.toLowerCase());
+            // Apply year filter
+            if (this.selectedYear) {
+                const movieYear = movie.releaseDate ? movie.releaseDate.toString() : '';
+                if (movieYear !== this.selectedYear) return false;
+            }
+            
+            return true;
         });
 
-        filteredMovies.forEach(movie => {
+        // Sort the filtered movies
+        const sortedMovies = this.sortMovies(filteredMovies);
+
+        sortedMovies.forEach(movie => {
             try {
                 const movieCard = this.createMovieCard(movie);
                 if (movieCard) {
@@ -514,6 +696,16 @@ class DashboardController {
         this.pageSize = parseInt(this.pageSizeSelect.value);
         this.currentPage = 1;
         this.loadMovies();
+    }
+
+    handleSortChange() {
+        this.sortBy = this.sortSelect.value;
+        this.renderMovies(); // Re-render with new sorting
+    }
+
+    handleYearFilterChange() {
+        this.selectedYear = this.yearFilter.value;
+        this.renderMovies(); // Re-render with new filter
     }
 
     goToPreviousPage() {

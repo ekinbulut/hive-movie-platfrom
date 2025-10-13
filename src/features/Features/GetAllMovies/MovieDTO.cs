@@ -19,4 +19,7 @@ public class MovieDTO
     public DateTime? CreatedTime { get; set; }
 
     public string? StreamId { get; set; }
+    
+    public int? ReleaseDate { get; set; }
+    
 }
