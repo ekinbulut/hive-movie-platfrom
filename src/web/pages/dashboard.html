@@ -19,9 +19,22 @@
             <div class="nav-menu">
                 <div class="user-info">
                     <span class="welcome-text">Welcome back!</span>
-                    <button class="logout-btn" id="logoutBtn" title="Logout">
-                        <span class="logout-icon">⏻</span>
-                    </button>
+                    <div class="account-dropdown" id="accountDropdown">
+                        <button class="account-btn" id="accountBtn" title="Account Menu">
+                            <span class="material-symbols-light--account-circle"></span>
+                        </button>
+                        <div class="dropdown-menu" id="dropdownMenu">
+                            <div class="dropdown-header">Account</div>
+                            <button class="dropdown-item" id="settingsBtn">
+                                <span class="material-symbols-light--settings-outline-rounded"></span>
+                                Settings
+                            </button>
+                            <button class="dropdown-item" id="logoutBtn">
+                                <span class="dropdown-icon">⏻</span>
+                                Logout
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

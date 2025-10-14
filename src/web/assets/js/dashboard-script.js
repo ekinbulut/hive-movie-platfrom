@@ -471,7 +471,10 @@ class DashboardController {
 
     initializeElements() {
         // Navigation elements
+        this.accountBtn = document.getElementById('accountBtn');
+        this.dropdownMenu = document.getElementById('dropdownMenu');
         this.logoutBtn = document.getElementById('logoutBtn');
+        this.settingsBtn = document.getElementById('settingsBtn');
         
         // Control elements
         this.searchInput = document.getElementById('searchInput');
@@ -507,8 +510,24 @@ class DashboardController {
     }
 
     attachEventListeners() {
-        // Navigation
+        // Navigation - Account dropdown
+        this.accountBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggleAccountDropdown();
+        });
+        
         this.logoutBtn.addEventListener('click', () => this.logout());
+        this.settingsBtn.addEventListener('click', () => this.openSettings());
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', () => {
+            this.closeAccountDropdown();
+        });
+        
+        // Prevent dropdown from closing when clicking inside it
+        this.dropdownMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
         
         // Search
         const debouncedSearch = Utils.debounce(() => this.handleSearch(), 500);
@@ -1052,7 +1071,33 @@ class DashboardController {
         this.moviesContainer.style.display = 'grid';
     }
 
+    toggleAccountDropdown() {
+        const isVisible = this.dropdownMenu.classList.contains('show');
+        if (isVisible) {
+            this.closeAccountDropdown();
+        } else {
+            this.openAccountDropdown();
+        }
+    }
+    
+    openAccountDropdown() {
+        this.dropdownMenu.classList.add('show');
+    }
+    
+    closeAccountDropdown() {
+        this.dropdownMenu.classList.remove('show');
+    }
+    
+    openSettings() {
+        // TODO: Implement settings functionality
+        console.log('Settings clicked');
+        this.closeAccountDropdown();
+        // For now, just show an alert
+        alert('Settings functionality will be implemented soon!');
+    }
+
     logout() {
+        this.closeAccountDropdown();
         if (confirm('Are you sure you want to logout?')) {
             SessionManager.clearAccessToken();
             window.location.href = 'login.html';
