@@ -1089,11 +1089,8 @@ class DashboardController {
     }
     
     openSettings() {
-        // TODO: Implement settings functionality
-        console.log('Settings clicked');
         this.closeAccountDropdown();
-        // For now, just show an alert
-        alert('Settings functionality will be implemented soon!');
+        window.location.href = 'account-settings.html';
     }
 
     logout() {

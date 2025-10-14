@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Settings - Project Hive</title>
+    <link rel="stylesheet" href="../assets/css/dashboard-styles.css">
+    <link rel="stylesheet" href="../assets/css/account-settings.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <div class="brand-icon">
+                    <div class="lsicon--file-movie-outline"></div>
+                </div>
+                <h2>Project Hive</h2>
+            </div>
+            <div class="nav-menu">
+                <div class="user-info">
+                    <span class="welcome-text">Welcome back!</span>
+                    <div class="account-dropdown" id="accountDropdown">
+                        <button class="account-btn" id="accountBtn" title="Account Menu">
+                            <span class="material-symbols-light--account-circle"></span>
+                        </button>
+                        <div class="dropdown-menu" id="dropdownMenu">
+                            <div class="dropdown-header">Account</div>
+                            <button class="dropdown-item" id="settingsBtn">
+                                <span class="material-symbols-light--settings-outline-rounded"></span>
+                                Settings
+                            </button>
+                            <button class="dropdown-item" id="logoutBtn">
+                                <span class="dropdown-icon">⏻</span>
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="dashboard">
+        <div class="dashboard-container">
+            <!-- Header Section -->
+            <div class="settings-header">
+                <div class="header-content">
+                    <div class="back-navigation">
+                        <button class="back-btn" id="backBtn" title="Back to Dashboard">
+                            <span class="back-icon">←</span>
+                        </button>
+                        <div class="header-text">
+                            <h1>Account Settings</h1>
+                            <p>Manage your personal information and preferences</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Content -->
+            <div class="settings-content">
+                <div class="settings-card">
+                    <div class="card-header">
+                        <h2>Personal Information</h2>
+                        <p>Update your basic account details</p>
+                    </div>
+                    
+                    <form class="settings-form" id="accountForm">
+                        <!-- Success/Error Messages -->
+                        <div id="messageContainer" class="message-container" style="display: none;">
+                            <div class="message" id="messageText"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="firstName" class="form-label">First Name</label>
+                            <input type="text" id="firstName" name="firstName" class="form-input" placeholder="Enter your first name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="lastName" class="form-label">Last Name</label>
+                            <input type="text" id="lastName" name="lastName" class="form-input" placeholder="Enter your last name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" id="email" name="email" class="form-input" placeholder="Enter your email" disabled>
+                            <small class="form-help">Email cannot be changed at this time</small>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" id="cancelBtn">Cancel</button>
+                            <button type="submit" class="btn-primary" id="saveBtn">
+                                <span class="btn-text">Save Changes</span>
+                                <span class="loading-spinner" style="display: none;"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- App Settings Card -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <h2>App Settings</h2>
+                        <p>Configure application preferences and media settings</p>
+                    </div>
+                    
+                    <form class="settings-form" id="appSettingsForm">
+                        <!-- Success/Error Messages for App Settings -->
+                        <div id="appMessageContainer" class="message-container" style="display: none;">
+                            <div class="message" id="appMessageText"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="mediaFolderPath" class="form-label">Media Folder Path</label>
+                            <input type="text" id="mediaFolderPath" name="mediaFolderPath" class="form-input" placeholder="/path/to/your/media/folder" required>
+                            <small class="form-help">Specify the path to your media files directory (e.g., /home/user/movies, C:\Media\Movies)</small>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" id="appCancelBtn">Cancel</button>
+                            <button type="submit" class="btn-primary" id="appSaveBtn">
+                                <span class="btn-text">Save Settings</span>
+                                <span class="loading-spinner" style="display: none;"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="dashboard-footer">
+        <div class="footer-content">
+            <span class="app-version">Project Hive v1.0.0</span>
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="github-link" title="View on GitHub">
+                <span class="devicon--github"></span>
+            </a>
+        </div>
+    </footer>
+
+    <!-- Environment configuration for Docker -->
+    <script src="../env-config.js"></script>
+    <script src="../assets/js/account-settings.js"></script>
+</body>
+</html>
