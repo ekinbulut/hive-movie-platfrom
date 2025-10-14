@@ -1,499 +1,381 @@
-# 🎬 Hive Movie Platform
+# 🎬 Hive - Self-Hosted Movie Management Platform
 
-A comprehensive, modular .NET 9.0 movie platform solution featuring microservices architecture, real-time file system monitoring, identity management, and a modern web interface.
+> A modern, microservices-based movie platform with automated media monitoring, user authentication, and a responsive web interface.
 
-## � Overview
+[![.NET](https://img.shields.io/badge/.NET-9.0-purple)](https://dotnet.microsoft.com/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Hive is an enterprise-grade movie platform ecosystem built using clean architecture and microservices principles, featuring:
+## 📖 Overview
 
-- **🎯 Core Movie API**: RESTful API for movie platform operations and content management
-- **🔐 Identity Management (IDM)**: Dedicated authentication and authorization service with JWT support
-- **👁️ File System Watcher**: Real-time console application for monitoring and processing media files
-- **🌐 Modern Web Interface**: Responsive SPA with authentication, dashboard, and movie management
-- **🏗️ Clean Architecture**: Domain-driven design with clear separation of concerns
-- **🐳 Containerized Deployment**: Full Docker/Podman support with orchestration
-- **⚡ High Performance**: Optimized for scalability and performance
+**Hive** is an open-source, self-hosted movie management platform designed for media enthusiasts. It automatically monitors your movie directories, extracts metadata, and provides a beautiful web interface to browse and manage your collection. Built with modern .NET microservices architecture, it's fast, scalable, and easy to deploy.
 
-## 🏗️ Architecture & Project Structure
+### ✨ Key Features
 
-The solution follows Domain-Driven Design (DDD), Clean Architecture, and Microservices patterns:
+- 🎥 **Automated Media Monitoring** - Watches your movie directories and automatically processes new files
+- 🔐 **Secure Authentication** - JWT-based user authentication and authorization
+- 🌐 **Modern Web UI** - Responsive interface for browsing and managing your collection
+- 🎬 **Jellyfin Integration** - Seamlessly integrates with Jellyfin media server
+- 🐳 **Docker Ready** - Easy deployment with Docker Compose
+- 🏗️ **Clean Architecture** - Maintainable, testable, and scalable codebase
+
+---
+
+## 🏛️ System Architecture
+
+Hive follows a **microservices architecture** with clean separation of concerns:
+
+```mermaid
+graph TB
+    User[👤 User Browser]
+    
+    User -->|HTTP| Web[🌐 Web Interface<br/>Nginx + HTML/JS<br/>Port: 8000]
+    
+    Web -->|Auth Requests| IDM[🔐 Hive IDM<br/>Authentication API<br/>Port: 8082]
+    Web -->|Movie Requests| App[🎬 Hive App<br/>Movie API<br/>Port: 8080]
+    Web -->|Media Playback| Jellyfin[📺 Jellyfin<br/>Media Server<br/>Port: 8096]
+    
+    Watcher[👁️ Hive Watcher<br/>File System Monitor] -->|Notify Changes| App
+    Watcher -->|Watch| Movies[(📁 Movie Files<br/>Directory)]
+    
+    App -->|Store Metadata| DB[(💾 Database)]
+    IDM -->|User Data| UserDB[(🔐 User Database)]
+    
+    Jellyfin -->|Read Media| Movies
+    
+    style User fill:#e1f5ff
+    style Web fill:#fff4e6
+    style App fill:#f3e5f5
+    style IDM fill:#e8f5e9
+    style Jellyfin fill:#fce4ec
+    style Watcher fill:#fff3e0
+    style Movies fill:#f1f8e9
+    style DB fill:#e0f2f1
+    style UserDB fill:#e0f2f1
+```
+
+### 🔄 Data Flow
+
+1. **User** accesses the web interface
+2. **Web UI** authenticates via **Hive IDM** (gets JWT token)
+3. **Web UI** fetches movie data from **Hive App**
+4. **Watcher Service** monitors movie directory for changes
+5. **Watcher Service** notifies **Hive App** of new/changed files
+6. **Hive App** processes metadata and updates the collection
+7. **Jellyfin** integration provides rich media playback
+
+### 📊 Component Interaction
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant W as Web UI
+    participant I as Hive IDM
+    participant A as Hive App
+    participant FS as File Watcher
+    participant J as Jellyfin
+    
+    U->>W: Access Dashboard
+    W->>I: POST /auth/login
+    I-->>W: JWT Token
+    
+    W->>A: GET /api/movies (+ JWT)
+    A-->>W: Movie List
+    W-->>U: Display Movies
+    
+    Note over FS: Monitoring Directory
+    FS->>FS: Detect New File
+    FS->>A: POST /api/movies/process
+    A->>A: Extract Metadata
+    A-->>FS: Processing Complete
+    
+    U->>W: Play Movie
+    W->>J: Stream Request
+    J-->>U: Media Stream
+```
+
+---
+
+## 🏗️ Project Structure
 
 ```
-📦 Hive Movie Platform
-├── 🚀 Applications
-│   ├── src/app/Hive.App/           # Core Movie API (Port: 8080)
-│   ├── src/app/Watcher.Console.App/ # File System Monitor
-│   └── src/idm/Hive.Idm.Api/       # Identity Management API (Port: 8082)
+project-hive/
+├── src/
+│   ├── app/
+│   │   ├── Hive.App/                 # Movie API (REST endpoints)
+│   │   └── Watcher.Console.App/      # File system watcher service
+│   │
+│   ├── idm/
+│   │   ├── Hive.Idm.Api/             # Authentication API
+│   │   └── Hive.Idm.Infrastructure/  # User database & repositories
+│   │
+│   ├── web/                          # Frontend (HTML/CSS/JS)
+│   │   ├── pages/                    # Web pages
+│   │   └── assets/                   # Static resources
+│   │
+│   ├── domain/Domain/                # Business entities & logic
+│   ├── features/Features/            # Use cases (CQRS handlers)
+│   ├── Infrastructure/               # Data access & integrations
+│   └── common/Common/                # Shared utilities
 │
-├── 🧱 Core Layers
-│   ├── src/domain/Domain/           # Business entities & domain logic
-│   ├── src/common/Common/           # Shared utilities & cross-cutting concerns
-│   ├── src/features/Features/       # Feature implementations (vertical slices)
-│   └── src/Infrastructure/          # Data access & external integrations
-│
-├── 🌐 Web Interface
-│   ├── src/web/pages/              # HTML pages (login, dashboard)
-│   ├── src/web/assets/             # Static assets (CSS, JS)
-│   └── src/web/tools/              # Development & testing tools
-│
-├── 🧪 Testing
-│   ├── tests/Common.Tests/         # Common utilities tests
-│   ├── tests/Console.App.Tests/    # File watcher tests
-│   └── tests/Infrastructure.Tests/ # Infrastructure layer tests
-│
-└── 🐳 Deployment
-    ├── docker-compose.yaml         # Multi-service orchestration
-    ├── Makefile                   # Development commands
-    └── Individual Dockerfiles      # Per-service containerization
+├── tests/                            # Unit & integration tests
+├── docker-compose.yaml               # Multi-service orchestration
+└── Makefile                          # Development commands
 ```
+
+### 📦 Architecture Layers
+
+| Layer | Responsibility | Examples |
+|-------|---------------|----------|
+| **Presentation** | User interfaces & APIs | Web UI, REST endpoints |
+| **Application** | Use cases & orchestration | CQRS handlers, commands/queries |
+| **Domain** | Business logic & rules | Movie entities, validation |
+| **Infrastructure** | External concerns | Database, file I/O, APIs |
+
+---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- **[.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)** - Core development framework
-- **[Docker](https://www.docker.com/) or [Podman](https://podman.io/)** - Container runtime (recommended)
-- **Modern Web Browser** - For web interface access
+- **Docker** or **Podman** (recommended)
+- **Docker Compose** or **Podman Compose**
+- **.NET 9.0 SDK** (only for local development)
 
-### 🐳 Containerized Deployment (Recommended)
-
-The fastest way to get started is using the provided Makefile with Docker/Podman:
+### Option 1: Docker Compose (Recommended)
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd hive-movie-platfrom
+# 1. Clone the repository
+git clone https://github.com/yourusername/project-hive.git
+cd project-hive
 
-# Show available commands
-make help
+# 2. Set environment variables
+export UID=$(id -u)
+export GID=$(id -g)
 
-# Start all services (builds images if needed)
+# 3. Start all services
 make up
+# or: docker-compose up -d
 
-# View service status and logs
-make status
-make logs
-
-# Stop all services
-make down
+# 4. Access the application
+# Web UI:       http://localhost:8000
+# Movie API:    http://localhost:8080
+# Auth API:     http://localhost:8082
+# Jellyfin:     http://localhost:8096
 ```
 
-**🌐 Access Points:**
-- **Main Movie API**: http://localhost:8080
-- **Identity Management**: http://localhost:8082  
-- **Web Interface**: Served via nginx (check docker-compose.yaml for port)
-
-### 🛠️ Development Setup
-
-For local development without containers:
+### Option 2: Local Development
 
 ```bash
-# Restore all dependencies
+# 1. Restore dependencies
 dotnet restore
 
-# Build the entire solution
+# 2. Build the solution
 dotnet build
 
-# Run comprehensive tests
+# 3. Run tests
 dotnet test
-```
 
-### 🎯 Running Individual Services
-
-#### Core Movie API
-```bash
+# 4. Start services individually
+# Terminal 1 - Movie API
 cd src/app/Hive.App
 dotnet run
-# Available at: http://localhost:8080
-```
 
-#### Identity Management API
-```bash
-cd src/idm/Hive.Idm.Api  
+# Terminal 2 - Auth API
+cd src/idm/Hive.Idm.Api
 dotnet run
-# Available at: http://localhost:8082
-```
 
-#### File System Watcher
-```bash
+# Terminal 3 - File Watcher
 cd src/app/Watcher.Console.App
-
-# Watch a specific directory
 dotnet run -- --watch /path/to/movies
-
-# With volume mapping in Docker
-docker run -v /host/movies:/app/shared hive-watcher --watch /app/shared
 ```
-
-## 🐳 Container Architecture
-
-The platform uses a multi-service architecture with the following containers:
-
-### 🎯 Core Services
-- **hive-app**: Main movie platform API (Port: 8080)
-- **hive-idm**: Identity management service (Port: 8082) 
-- **hive-watcher**: File system monitoring service
-
-### 🔧 Advanced Container Operations
-
-```bash
-# Build specific service
-make build
-podman-compose build hive-app
-
-# View real-time logs for specific service
-make logs-app
-make logs-idm
-
-# Restart services after changes
-make restart
-
-# Complete cleanup (removes containers and images)
-make clean-all
-
-# Health check status
-make status
-```
-
-### 📁 Volume Mappings
-- **Media Directory**: `/home/user/shared/Plex/Shared Movies` → `/app/shared`
-- **Configuration**: Auto-generated from environment variables
-
-## 📡 API Documentation & Endpoints
-
-### 🎯 Core Movie API (Port: 8080)
-- **OpenAPI/Swagger**: `http://localhost:8080/swagger` (Development mode)
-- **Health Check**: `http://localhost:8080/health`
-- **Movies Endpoint**: `GET /api/movies` - Retrieve movie collection
-- **OpenAPI Spec**: `http://localhost:8080/openapi/v1.json`
-
-### 🔐 Identity Management API (Port: 8082)
-- **Authentication**: `POST /auth/login` - JWT token generation
-- **Token Validation**: `POST /auth/validate` - Verify JWT tokens
-- **User Management**: Various endpoints for user operations
-- **Swagger UI**: `http://localhost:8082/swagger`
-
-### 🌐 Web Interface Features
-- **🔐 JWT Authentication**: Secure login with automatic token management
-- **📊 Movie Dashboard**: Browse, search, and manage movie collections
-- **📱 Responsive Design**: Mobile-friendly interface
-- **⚡ Real-time Updates**: Live data synchronization with APIs
-
-## 🏛️ Detailed Component Overview
-
-### 🎯 Core Applications
-
-| Service | Port | Description | Key Features |
-|---------|------|-------------|--------------|
-| **Hive.App** | 8080 | Main Movie Platform API | RESTful endpoints, movie management, file processing |
-| **Hive.Idm.Api** | 8082 | Identity Management Service | JWT authentication, user management, CORS support |
-| **Watcher.Console.App** | - | File System Monitor | Real-time file detection, metadata extraction, automated processing |
-
-### 🧱 Architecture Layers
-
-| Layer | Purpose | Key Components |
-|-------|---------|----------------|
-| **Domain** | Business Logic | Entities, Value Objects, Domain Services, Business Rules |
-| **Features** | Use Cases | CQRS Handlers, Vertical Slice Architecture, Feature-specific Logic |
-| **Infrastructure** | External Concerns | Database Access, File I/O, Message Queuing, Caching |
-| **Common** | Shared Utilities | Cryptography, Parsing, Cross-cutting Concerns |
-
-### 🌐 Web Interface Components
-
-- **🔐 Authentication Pages**: Secure login with JWT integration
-- **📊 Dashboard Interface**: Movie collection management and statistics  
-- **🛠️ Development Tools**: API testing utilities and debugging interfaces
-- **📱 Responsive Design**: Mobile-first CSS with modern UI patterns
-
-## 🧪 Testing Strategy
-
-### 📊 Test Coverage Overview
-
-The solution implements a comprehensive testing strategy across multiple layers:
-
-| Test Project | Scope | Coverage |
-|--------------|-------|----------|
-| **Common.Tests** | Utilities & Helpers | Cryptography, Parsing, Shared Logic |
-| **Console.App.Tests** | File System Watcher | File Detection, Event Handling, Service Logic |
-| **Infrastructure.Tests** | Data & External Services | Repository Pattern, Database Operations |
-
-### 🚀 Running Tests
-
-```bash
-# Execute all tests with detailed output
-dotnet test --verbosity normal
-
-# Generate code coverage reports
-dotnet test --collect:"XPlat Code Coverage" --results-directory ./coverage
-
-# Run specific test project
-dotnet test tests/Common.Tests/ --logger "console;verbosity=detailed"
-dotnet test tests/Console.App.Tests/ --filter "Category=Unit"
-dotnet test tests/Infrastructure.Tests/ --filter "FullyQualifiedName~Repository"
-
-# Run tests in watch mode for TDD
-dotnet watch test --project tests/Common.Tests/
-```
-
-### 🔧 Testing Technologies
-
-- **xUnit**: Primary testing framework with powerful assertions
-- **Moq**: Mocking framework for dependency isolation  
-- **FluentAssertions**: Enhanced readability for test assertions
-- **TestContainers**: Integration testing with real database instances
-
-## ⚙️ Configuration Management
-
-### 🔐 Authentication & Security
-
-The platform implements a modern JWT-based authentication system:
-
-**Identity Management Service Features:**
-- **JWT Token Generation**: Secure token creation with configurable expiration
-- **CORS Support**: Cross-origin requests for web interface integration
-- **Entity Framework**: Database-backed user management
-- **FastEndpoints**: High-performance API endpoints
-
-### 🛠️ Environment Configuration
-
-Each service supports environment-specific configuration:
-
-```bash
-# Development Environment Variables
-ASPNETCORE_ENVIRONMENT=Development
-ASPNETCORE_URLS=http://+:8080  # Hive.App
-ASPNETCORE_URLS=http://+:8082  # Hive.Idm.Api
-
-# Database Configuration (Hive.Idm.Infrastructure)
-# Configured via appsettings.json with connection strings
-
-# File Watcher Configuration
-# Command-line arguments: --watch /path/to/monitor
-```
-
-### 📁 Configuration Files
-
-| Service | Configuration Files | Purpose |
-|---------|-------------------|---------|
-| **Hive.App** | `appsettings.json`, `appsettings.Development.json` | API settings, logging, allowed hosts |
-| **Hive.Idm.Api** | `appsettings.json`, `appsettings.Development.json` | JWT config, database connection, CORS |
-| **Watcher.Console.App** | `appsettings.json` | Logging configuration, service settings |
-
-## �️ File System Watcher Capabilities
-
-### 🚀 Advanced Monitoring Features
-
-The Watcher service provides enterprise-grade file system monitoring:
-
-| Feature | Description | Implementation |
-|---------|-------------|----------------|
-| **Real-time Detection** | Instant notification of file system changes | `FileSystemWatcher` with event-driven architecture |
-| **Metadata Extraction** | Automatic movie file analysis | Custom parsers for file names and properties |
-| **Health Monitoring** | Container health checks and status reporting | Docker health check integration |
-| **Volume Integration** | Seamless Docker volume mounting | Configured for `/app/shared` monitoring |
-| **Error Recovery** | Robust exception handling and service restart | Comprehensive logging and graceful degradation |
-
-### 📊 Supported File Operations
-
-- ✅ **File Creation**: New movie files detected automatically
-- ✅ **File Modification**: Changes to existing files tracked  
-- ✅ **File Deletion**: Cleanup operations logged and processed
-- ✅ **File Renaming**: Name changes captured with before/after states
-- ✅ **Directory Operations**: Folder structure changes monitored
-- ✅ **Batch Processing**: Multiple file operations handled efficiently
-
-### 🔧 Service Architecture
-
-```bash
-# Service Dependencies
-hive-watcher:
-  depends_on:
-    - hive-app      # Core API for data submission
-    - hive-idm      # Authentication for secure operations
-  
-# Volume Configuration
-volumes:
-  - "/home/user/shared/Plex/Shared Movies:/app/shared"
-
-# Health Monitoring
-healthcheck:
-  test: ["CMD", "test", "-d", "/app/shared"]
-  interval: 30s
-```
-
-## 🛠️ Development Workflow
-
-### 🚀 Adding New Features
-
-Follow the clean architecture approach for new feature development:
-
-1. **📋 Domain Layer** 
-   - Define entities in `src/domain/Domain/Entities/`
-   - Implement business rules and domain services
-   - Create value objects for complex data types
-
-2. **⚡ Features Layer**
-   - Use CQRS pattern in `src/features/Features/`
-   - Implement command/query handlers
-   - Follow vertical slice architecture
-
-3. **🔧 Infrastructure Layer**
-   - Add repositories in `src/Infrastructure/Database/`
-   - Implement external service integrations
-   - Configure caching and messaging
-
-4. **🧪 Testing Strategy**
-   - Write unit tests for domain logic
-   - Create integration tests for repositories
-   - Add end-to-end tests for complete workflows
-
-### 📝 Code Standards & Best Practices
-
-The project enforces modern C# development standards:
-
-```csharp
-// ✅ Enabled Features
-- Nullable reference types
-- Implicit usings  
-- File-scoped namespaces
-- Record types for DTOs
-- Minimal APIs where appropriate
-
-// ✅ Architecture Patterns
-- Clean Architecture boundaries
-- CQRS with MediatR
-- Repository pattern
-- Dependency injection
-- FastEndpoints for high-performance APIs
-```
-
-### 🐳 Development Environment Setup
-
-```bash
-# Start development environment
-make up
-
-# Monitor logs during development  
-make logs
-
-# Rebuild after code changes
-make build && make restart
-
-# Run tests continuously during development
-dotnet watch test --project tests/Common.Tests/
-```
-
-## 📋 Command Reference
-
-### 🐳 Container Management (Makefile)
-
-| Command | Description | Usage |
-|---------|-------------|-------|
-| `make help` | Show all available commands | Default command |
-| `make up` | Start all services | Builds images if needed |
-| `make down` | Stop all services | Graceful shutdown |
-| `make restart` | Restart all services | `down` + `up` |
-| `make build` | Build all container images | Force rebuild |
-| `make logs` | Show logs for all services | Last 20 lines |
-| `make logs-app` | Show Hive App logs | Real-time follow |
-| `make logs-idm` | Show IDM service logs | Real-time follow |
-| `make status` | Show container status | Health and ports |
-| `make clean` | Remove containers | Keeps images |
-| `make clean-all` | Complete cleanup | Removes everything |
-
-### 🔧 Development Commands
-
-```bash
-# .NET Solution Management
-dotnet restore                    # Restore all dependencies
-dotnet build                     # Build entire solution  
-dotnet test                      # Run all tests
-dotnet run --project src/app/Hive.App/    # Run Core API
-
-# File System Watcher
-cd src/app/Watcher.Console.App/
-dotnet run -- --watch /movies   # Monitor directory
-dotnet run -- --help           # Show watcher options
-
-# Identity Management API
-cd src/idm/Hive.Idm.Api/
-dotnet run                      # Start IDM service
-```
-
-### 🌐 Service URLs
-
-- **🎯 Core Movie API**: `http://localhost:8080`
-- **🔐 Identity Management**: `http://localhost:8082` 
-- **📚 API Documentation**: `http://localhost:8080/swagger` & `http://localhost:8082/swagger`
-
-## 🔍 Monitoring & Observability
-
-### 📊 Logging Strategy
-
-The platform implements comprehensive logging across all services:
-
-| Service | Logging Features | Configuration |
-|---------|------------------|---------------|
-| **All Services** | Structured logging with `Microsoft.Extensions.Logging` | `appsettings.json` |
-| **Hive.App** | Request/response logging, performance metrics | Console + file output |
-| **Hive.Idm.Api** | Authentication events, security logging | JWT token lifecycle |
-| **Watcher Service** | File system events, error tracking | Real-time console output |
-
-### 🚨 Error Handling & Resilience
-
-- **🌐 Global Exception Handling**: Centralized error processing in Web APIs
-- **🔄 Automatic Recovery**: File watcher service graceful restart capabilities  
-- **� Comprehensive Logging**: All errors logged with context and stack traces
-- **🏥 Health Checks**: Container health monitoring with automatic restarts
-- **⚡ Performance Monitoring**: Request timing and resource usage tracking
-
-### � Production Readiness Features
-
-- **🐳 Container Health Checks**: Built-in monitoring for all services
-- **🔐 Security Headers**: CORS, authentication, and authorization policies
-- **⚡ Performance Optimization**: Efficient database queries and caching strategies
-- **📊 Metrics Collection**: Ready for integration with monitoring solutions
-
-## 🤝 Contributing
-
-We welcome contributions! Please follow our development workflow:
-
-1. **🍴 Fork the repository** and create your feature branch
-   ```bash
-   git checkout -b feature/amazing-new-feature
-   ```
-
-2. **🧪 Ensure all tests pass** before submitting
-   ```bash
-   dotnet test
-   make build  # Verify container builds
-   ```
-
-3. **📝 Follow code standards** and add appropriate tests
-4. **📤 Submit a Pull Request** with a clear description of changes
-
-### 🎯 Development Guidelines
-
-- **Clean Architecture**: Maintain clear separation of concerns
-- **Test Coverage**: Ensure new features include comprehensive tests  
-- **Documentation**: Update README and inline documentation
-- **Container Compatibility**: Verify Docker/Podman builds succeed
-
-## 📄 License & Support
-
-- **📋 License**: MIT License - see LICENSE file for details
-- **🐛 Issues**: Use GitHub Issues for bug reports and feature requests  
-- **💬 Discussions**: GitHub Discussions for questions and community support
-- **📚 Documentation**: Comprehensive README files in each project directory
 
 ---
 
-## 🚀 Quick Links
+## ⚙️ Configuration
 
-- **🎯 [Core API Documentation](src/app/Hive.App/)** - Movie platform API details
-- **🔐 [Identity Management](src/idm/Hive.Idm.Api/)** - Authentication service info  
-- **👁️ [File Watcher Service](src/app/Watcher.Console.App/)** - File monitoring details
-- **🌐 [Web Interface](src/web/)** - Frontend application documentation
-- **🧪 [Testing Strategy](tests/)** - Comprehensive test suite information
+### Environment Variables
 
-**Built with ❤️ using .NET 9.0, Clean Architecture, and Modern DevOps Practices**
+Create a `.env` file in the project root:
+
+```bash
+# User permissions (for Docker volumes)
+UID=1000
+GID=1000
+
+# Movie directory (adjust to your path)
+MOVIES_DIR=/home/user/Movies
+
+# Jellyfin (optional)
+JELLYFIN_BASE_URL=http://localhost:8096
+JELLYFIN_ACCESS_TOKEN=your-api-key-here
+```
+
+### Docker Compose Services
+
+| Service | Port | Description |
+|---------|------|-------------|
+| `hive-app` | 8080 | Movie API |
+| `hive-idm` | 8082 | Authentication API |
+| `hive-watcher` | - | File monitor (background) |
+| `project-hive-web` | 8000 | Web interface |
+| `jellyfin` | 8096 | Media server (optional) |
+
+### Volume Mappings
+
+```yaml
+volumes:
+  # Configuration & cache
+  - jellyfin-config:/config
+  - jellyfin-cache:/cache
+  
+  # Movie directory (read-only)
+  - "/path/to/your/movies:/app/shared:ro"
+  - "/path/to/your/movies:/media:ro"  # Jellyfin mount
+```
+
+---
+
+## 🛠️ Development
+
+### Make Commands
+
+```bash
+make help          # Show all available commands
+make up            # Start all services
+make down          # Stop all services
+make restart       # Restart services
+make logs          # View logs (all services)
+make logs-app      # View Movie API logs
+make logs-idm      # View Auth API logs
+make build         # Rebuild containers
+make clean         # Remove containers
+make status        # Show service status
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+dotnet test
+
+# Run specific test project
+dotnet test tests/Common.Tests/
+
+# Run with coverage
+dotnet test --collect:"XPlat Code Coverage"
+
+# Watch mode (TDD)
+dotnet watch test --project tests/Common.Tests/
+```
+
+### Adding New Features
+
+1. **Domain Layer** - Add entities in `src/domain/Domain/Entities/`
+2. **Features Layer** - Create handlers in `src/features/Features/`
+3. **API Layer** - Add endpoints in `src/app/Hive.App/`
+4. **Tests** - Write tests in corresponding `tests/` directory
+
+---
+
+## 🧪 Testing
+
+The project includes comprehensive test coverage:
+
+| Test Project | Coverage |
+|--------------|----------|
+| **Common.Tests** | Utilities, parsing, crypto |
+| **Console.App.Tests** | File watcher logic |
+| **Infrastructure.Tests** | Database, repositories |
+
+**Testing Stack:**
+- **xUnit** - Test framework
+- **Moq** - Mocking
+- **FluentAssertions** - Readable assertions
+
+---
+
+## 🐳 Docker Deployment
+
+### Building Images
+
+```bash
+# Build all images
+docker-compose build
+
+# Build specific service
+docker-compose build hive-app
+```
+
+### Production Deployment
+
+```bash
+# Start in production mode
+ASPNETCORE_ENVIRONMENT=Production docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Scale services (if needed)
+docker-compose up -d --scale hive-app=3
+```
+
+### Health Checks
+
+All services include health checks:
+
+```bash
+# Check service health
+docker-compose ps
+
+# Manual health check
+curl http://localhost:8080/health
+curl http://localhost:8082/health
+```
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Here's how to get started:
+
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
+
+### Development Guidelines
+
+- Follow Clean Architecture principles
+- Write tests for new features
+- Update documentation
+- Follow C# coding conventions
+- Ensure Docker builds succeed
+
+---
+
+## 📝 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- Built with [.NET 9.0](https://dotnet.microsoft.com/)
+- [Jellyfin](https://jellyfin.org/) for media server integration
+- [FastEndpoints](https://fast-endpoints.com/) for high-performance APIs
+- [MediatR](https://github.com/jbogard/MediatR) for CQRS pattern
+
+---
+
+## 📞 Support
+
+- 🐛 **Issues**: [GitHub Issues](https://github.com/yourusername/project-hive/issues)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/yourusername/project-hive/discussions)
+- 📖 **Documentation**: Check individual project README files
+
+---
+
+**Built with ❤️ by the open-source community**

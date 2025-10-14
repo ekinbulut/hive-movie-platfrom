@@ -82,6 +82,27 @@ services:
       - hive-idm
     networks:
       - hive-network
+  jellyfin:
+    image: docker.io/jellyfin/jellyfin:latest
+    container_name: jellyfin
+    ports:
+      - "8096:8096/tcp"
+      - "7359:7359/udp"
+    volumes:
+      - jellyfin-cache:/cache
+      - jellyfin-config:/config
+      - "/home/user/shared/Plex/Shared Movies:/media:ro"
+    user: "${UID:-1000}:${GID:-1000}"
+    restart: unless-stopped
+    networks:
+      - hive-network
+    labels:
+      - "io.containers.autoupdate=registry"
+
+volumes:
+  jellyfin-cache:
+  jellyfin-config:
+
 networks:
   hive-network:
     driver: bridge
