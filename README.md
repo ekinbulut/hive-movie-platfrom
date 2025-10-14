@@ -35,7 +35,7 @@ graph TB
     Web -->|Movie Requests| App[🎬 Hive App<br/>Movie API<br/>Port: 8080]
     Web -->|Media Playback| Jellyfin[📺 Jellyfin<br/>Media Server<br/>Port: 8096]
     
-    Watcher[👁️ Hive Watcher<br/>File System Monitor] -->|Notify Changes| App
+    Watcher[👁️ Hive Watcher<br/>File System Monitor]
     Watcher -->|Watch| Movies[(📁 Movie Files<br/>Directory)]
     
     App -->|Store Metadata| DB[(💾 Database)]
@@ -85,9 +85,7 @@ sequenceDiagram
     
     Note over FS: Monitoring Directory
     FS->>FS: Detect New File
-    FS->>A: POST /api/movies/process
-    A->>A: Extract Metadata
-    A-->>FS: Processing Complete
+    FS->>J: Extract Metadata
     
     U->>W: Play Movie
     W->>J: Stream Request
