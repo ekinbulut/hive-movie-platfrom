@@ -68,6 +68,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bin", "bin", "{C80AD27C-0E0
 		docker-compose.yaml = docker-compose.yaml
 		Makefile = Makefile
 		README.md = README.md
+		docker-compose-infra.yaml = docker-compose-infra.yaml
 	EndProjectSection
 EndProject
 Global

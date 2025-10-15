@@ -51,8 +51,18 @@ public class IdmDbContext : DbContext
 
         // Seed default roles
         modelBuilder.Entity<Role>().HasData(
-            new Role { Id = Guid.NewGuid(), Name = "Admin", Description = "System administrator with full access" },
-            new Role { Id = Guid.NewGuid(), Name = "User", Description = "Standard user with basic access" }
+            new Role
+            {
+                Id = new Guid("1332fdc3-82a8-4f24-a39f-3cb84b90fd6f"), Name = "Admin", Description = "System administrator with full access",
+                CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new Role
+            {
+                Id = new Guid("b7fa8d96-d59d-40f4-b862-cb4e2e400d5c"), Name = "User", Description = "Standard user with basic access",
+                CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            }
         );
     }
 }
