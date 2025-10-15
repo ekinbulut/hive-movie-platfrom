@@ -265,10 +265,23 @@ class RegisterHandler {
         const confirmPasswordInput = document.getElementById('registerConfirmPassword');
 
         const validatePasswordMatch = () => {
-            if (confirmPasswordInput.value && passwordInput.value !== confirmPasswordInput.value) {
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            
+            // Clear all password-related classes first
+            confirmPasswordInput.classList.remove('password-mismatch', 'password-match');
+            
+            if (confirmPassword && password !== confirmPassword) {
                 confirmPasswordInput.setCustomValidity('Passwords do not match');
+                confirmPasswordInput.classList.add('password-mismatch');
+                this.showError('Passwords do not match');
+            } else if (confirmPassword && password && password === confirmPassword) {
+                confirmPasswordInput.setCustomValidity('');
+                confirmPasswordInput.classList.add('password-match');
+                this.hideMessages();
             } else {
                 confirmPasswordInput.setCustomValidity('');
+                this.hideMessages();
             }
         };
 
@@ -417,6 +430,12 @@ class RegisterHandler {
     hideMessages() {
         this.errorMessage.style.display = 'none';
         this.successMessage.style.display = 'none';
+        
+        // Clear visual password validation states from form inputs
+        const confirmPasswordInput = document.getElementById('registerConfirmPassword');
+        if (confirmPasswordInput) {
+            confirmPasswordInput.classList.remove('password-mismatch', 'password-match');
+        }
     }
 }
 

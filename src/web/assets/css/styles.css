@@ -146,6 +146,22 @@ body {
     border-color: #d1d5db;
 }
 
+/* Invalid input styles */
+.form-group input:invalid {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.form-group input.password-mismatch {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.form-group input.password-match {
+    border-color: #16a34a;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
 /* Primary button */
 .primary-button {
     width: 100%;
