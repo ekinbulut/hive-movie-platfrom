@@ -1,9 +1,9 @@
+using System.Security.Claims;
 using Domain.Abstraction.Mediator;
 using FastEndpoints;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 
-namespace Features.GetUserInfo;
+namespace Hive.Idm.Api.Endpoints.Info;
 
 public class GetUserInfoEndpoint(IMediator mediator) : EndpointWithoutRequest<GetUserInfoResponse>
 {

@@ -1,6 +1,6 @@
 using Domain.Abstraction.Mediator;
 
-namespace Features.GetUserInfo;
+namespace Hive.Idm.Api.Endpoints.Info;
 
 public class GetUserInfoQuery : IQuery<GetUserInfoResponse>
 {

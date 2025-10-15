@@ -29,6 +29,6 @@ Authorization: Bearer {{jwt_token}}
 }
 
 ### Get User Info from Hive App using the JWT Token
-GET {{Hive.App_HostAddress}}/v1/api/user/info
+GET {{Idm.Api_HostAddress}}/user/info
 Content-Type: application/json
 Authorization: Bearer {{jwt_token}}
