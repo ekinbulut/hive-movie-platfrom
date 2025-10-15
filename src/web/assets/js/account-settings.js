@@ -342,8 +342,8 @@ class AccountSettingsManager {
 
             // Map form data to API structure
             const updateData = {
-                name: this.firstNameInput.value.trim(),
-                surname: this.lastNameInput.value.trim()
+                firstName: this.firstNameInput.value.trim(),
+                lastName: this.lastNameInput.value.trim()
             };
 
             // Assume PUT endpoint follows same pattern as GET
