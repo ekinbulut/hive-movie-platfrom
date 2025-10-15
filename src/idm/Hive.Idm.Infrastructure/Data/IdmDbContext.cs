@@ -14,6 +14,7 @@ public class IdmDbContext : DbContext
     public DbSet<UserRole> UserRoles { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
+    public DbSet<Configuration> Configurations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -48,6 +49,9 @@ public class IdmDbContext : DbContext
         modelBuilder.Entity<Role>()
             .HasIndex(r => r.Name)
             .IsUnique();
+
+        modelBuilder.Entity<Configuration>()
+            .HasKey(c => c.Id);
 
         // Seed default roles
         modelBuilder.Entity<Role>().HasData(

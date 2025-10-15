@@ -12,6 +12,7 @@ public static partial class ServiceCollectionExtensions
     public static IServiceCollection AddDbContextInfra(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IConfigurationRepository, ConfigurationRepository>();
         
         services.AddDbContext<IdmDbContext>(options =>
         {
