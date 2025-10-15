@@ -27,3 +27,8 @@ Authorization: Bearer {{jwt_token}}
   "pageSize": 15,
   "pageNumber": 1
 }
+
+### Get User Info from Hive App using the JWT Token
+GET {{Idm.Api_HostAddress}}/user/info
+Content-Type: application/json
+Authorization: Bearer {{jwt_token}}

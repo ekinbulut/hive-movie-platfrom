@@ -45,13 +45,14 @@ public class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
         }
 
         // Mock user validation - replace with actual user service
-        if (!IsValidUser(req.Username, req.Password))
+        var user = await ValidateUserAsync(req.Username, req.Password);
+        if (user == null)
         {
             await Send.ErrorsAsync(401, ct);
             return;
         }
 
-        var token = GenerateJwtToken(req.Username);
+        var token = GenerateJwtToken(user.Username, user.Id);
         
         await Send.OkAsync(new LoginResponse
         {
@@ -60,29 +61,26 @@ public class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
         }, ct);
     }
 
-    private bool IsValidUser(string username, string password)
+    private async Task<Domain.Entities.User?> ValidateUserAsync(string username, string password)
     {
-        var exists = _userRepository.UsernameExistsAsync(username)
-            .ConfigureAwait(false)
-            .GetAwaiter()
-            .GetResult();
-        // Mock validation - replace with actual user validation
-
+        var exists = await _userRepository.UsernameExistsAsync(username);
+        
         if (!exists)
         {
-            return false;
+            return null;
         }
         
-        var user = _userRepository.GetByUsernameAsync(username)
-            .ConfigureAwait(false)
-            .GetAwaiter()
-            .GetResult();
+        var user = await _userRepository.GetByUsernameAsync(username);
         
+        if (user == null || HashHelper.ComputeSha256Hash(password) != user.PasswordHash)
+        {
+            return null;
+        }
         
-        return HashHelper.ComputeSha256Hash(password) == user.PasswordHash;
+        return user;
     }
 
-    private string GenerateJwtToken(string username)
+    private string GenerateJwtToken(string username, Guid userId)
     {
         var config = Config;
         var secretKey = config["JwtSettings:SecretKey"] ?? "YourSuperSecretKeyThatIsAtLeast32CharactersLong!";
@@ -94,9 +92,9 @@ public class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
 
         var claims = new[]
         {
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             new Claim(ClaimTypes.Name, username),
-            new Claim(ClaimTypes.NameIdentifier, username),
-            new Claim(JwtRegisteredClaimNames.Sub, username),
+            new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 

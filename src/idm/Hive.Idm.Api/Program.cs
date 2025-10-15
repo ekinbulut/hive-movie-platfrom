@@ -1,4 +1,6 @@
+using System.Reflection;
 using System.Text;
+using Domain.Extension;
 using FastEndpoints;
 using Hive.Idm.Infrastructure.Data;
 using Hive.Idm.Infrastructure.Extensions;
@@ -28,6 +30,13 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader();
     });
 });
+
+var featuresAssembly = Assembly.LoadFrom(Path.Combine(AppContext.BaseDirectory, "Hive.Idm.Api.dll"));
+
+builder.Services.AddMediator(
+    typeof(Program).Assembly,
+    featuresAssembly
+);
 
 
 // Add JWT configuration
