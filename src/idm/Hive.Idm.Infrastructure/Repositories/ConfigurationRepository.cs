@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Domain.Entities;
 using Domain.Interfaces;
 using Hive.Idm.Infrastructure.Data;

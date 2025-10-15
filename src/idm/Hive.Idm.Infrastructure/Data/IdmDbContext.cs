@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -52,6 +53,13 @@ public class IdmDbContext : DbContext
 
         modelBuilder.Entity<Configuration>()
             .HasKey(c => c.Id);
+        
+        modelBuilder.Entity<Configuration>()
+            .Property(c => c.Settings)
+            .HasColumnType("jsonb")
+            .HasConversion(
+                v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
+                v => JsonSerializer.Deserialize<Settings>(v, (JsonSerializerOptions)null));
 
         // Seed default roles
         modelBuilder.Entity<Role>().HasData(

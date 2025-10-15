@@ -42,3 +42,19 @@ Authorization: Bearer {{jwt_token}}
   "firstName": "Ekin",
   "lastName": "Bulut"
 }
+
+### POST User Config from Hive App using the JWT Token
+POST {{Idm.Api_HostAddress}}/user/configuration
+Content-Type: application/json
+Authorization: Bearer {{jwt_token}}
+
+{
+"jellyFinServer": "test",
+"jellyFinApiKey": "test",
+"mediaFolder": "test"
+}
+
+### GET User Config from Hive App using the JWT Token
+GET {{Idm.Api_HostAddress}}/user/configuration
+Content-Type: application/json
+Authorization: Bearer {{jwt_token}}
