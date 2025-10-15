@@ -65,7 +65,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hive", "hive", "{645EDB6D-6
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bin", "bin", "{C80AD27C-0E06-4E29-904B-ED155C7BF076}"
 	ProjectSection(SolutionItems) = preProject
-		start.sh = start.sh
 		docker-compose.yaml = docker-compose.yaml
 		Makefile = Makefile
 		README.md = README.md
