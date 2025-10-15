@@ -1,5 +1,4 @@
 using Domain.Abstraction.Mediator;
-using Domain.Interfaces;
 using FastEndpoints;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -30,44 +29,4 @@ public class GetUserInfoEndpoint(IMediator mediator) : EndpointWithoutRequest<Ge
         var response = await mediator.SendAsync(query, ct);
         await Send.OkAsync(response, ct);
     }
-}
-
-
-public class GetUserInfoQueryHandler(IUserRepository userRepository) : IQueryHandler<GetUserInfoQuery, GetUserInfoResponse>
-{
-    public async Task<GetUserInfoResponse> HandleAsync(GetUserInfoQuery query,
-        CancellationToken cancellationToken = default)
-    {
-        var user = await userRepository.GetByIdAsync(query.UserId);
-        
-        if (user == null)
-        {
-            return new GetUserInfoResponse
-            {
-                Name = string.Empty,
-                Surname = string.Empty,
-                Email = string.Empty
-            };
-        }
-        
-        return new GetUserInfoResponse
-        {
-            Name = user.FirstName ?? string.Empty,
-            Surname = user.LastName ?? string.Empty,
-            Email = user.Email
-        };
-    }
-}
-
-
-public class GetUserInfoQuery : IQuery<GetUserInfoResponse>
-{
-    public Guid UserId { get; set; }
-}
-
-public class GetUserInfoResponse
-{
-    public string Name { get; set; }
-    public string Surname { get; set; }
-    public string Email { get; set; }
 }
