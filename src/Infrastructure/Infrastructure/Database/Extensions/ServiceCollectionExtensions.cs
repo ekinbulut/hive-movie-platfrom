@@ -12,6 +12,7 @@ public static partial class ServiceCollectionExtensions
     public static IServiceCollection AddDbContext(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<IMovieRepository, MovieRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
         
         services.AddDbContext<HiveDbContext>(options =>
         {
