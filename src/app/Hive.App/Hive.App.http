@@ -32,3 +32,13 @@ Authorization: Bearer {{jwt_token}}
 GET {{Idm.Api_HostAddress}}/user/info
 Content-Type: application/json
 Authorization: Bearer {{jwt_token}}
+
+### PUT Update User Info in Hive App using the JWT Token
+PUT {{Idm.Api_HostAddress}}/user/info
+Content-Type: application/json
+Authorization: Bearer {{jwt_token}}
+
+{
+  "firstName": "Ekin",
+  "lastName": "Bulut"
+}

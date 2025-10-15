@@ -14,4 +14,5 @@ public interface IUserRepository
     Task<bool> ExistsAsync(Guid id);
     Task<bool> EmailExistsAsync(string email);
     Task<bool> UsernameExistsAsync(string username);
+    Task<bool> UpdateUserInfoAsync(Guid commandUserId, string commandFirstName, string commandLastName, CancellationToken cancellationToken);
 }

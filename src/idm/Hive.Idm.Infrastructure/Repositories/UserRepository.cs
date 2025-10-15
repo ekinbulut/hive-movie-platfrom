@@ -76,4 +76,21 @@ public class UserRepository : IUserRepository
     {
         return await _idmDbContext.Users.AnyAsync(e => e.Username == username);
     }
+
+    public Task<bool> UpdateUserInfoAsync(Guid commandUserId, string commandFirstName, string commandLastName,
+        CancellationToken cancellationToken)
+    {
+        var user = _idmDbContext.Users.FirstOrDefault(u => u.Id == commandUserId);
+        if (user == null)
+        {
+            return Task.FromResult(false);
+        }
+
+        user.FirstName = commandFirstName;
+        user.LastName = commandLastName;
+
+        _idmDbContext.Users.Update(user);
+        return _idmDbContext.SaveChangesAsync(cancellationToken)
+            .ContinueWith(t => t.IsCompletedSuccessfully, cancellationToken);
+    }
 }

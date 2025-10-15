@@ -3,7 +3,7 @@ using Domain.Abstraction.Mediator;
 using FastEndpoints;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 
-namespace Hive.Idm.Api.Endpoints.Info;
+namespace Hive.Idm.Api.Endpoints.Info.Get;
 
 public class GetUserInfoEndpoint(IMediator mediator) : EndpointWithoutRequest<GetUserInfoResponse>
 {

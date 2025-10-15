@@ -1,7 +1,7 @@
 using Domain.Abstraction.Mediator;
 using Domain.Interfaces;
 
-namespace Hive.Idm.Api.Endpoints.Info;
+namespace Hive.Idm.Api.Endpoints.Info.Get;
 
 public class GetUserInfoQueryHandler(IUserRepository userRepository) : IQueryHandler<GetUserInfoQuery, GetUserInfoResponse?>
 {
