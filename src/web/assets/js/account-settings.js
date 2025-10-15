@@ -3,13 +3,13 @@
 // API Configuration - Environment aware
 const API_CONFIG = {
     AUTH_BASE_URL: window.location.hostname === 'localhost' 
-        ? 'http://localhost:8082' 
-        : 'http://hive-idm:8082',
+        ? 'http://localhost:5188' 
+        : 'http://hive-idm:0882',
     MOVIES_BASE_URL: window.location.hostname === 'localhost' 
-        ? 'http://localhost:8080' 
+        ? 'http://localhost:5154' 
         : 'http://hive-app:8080',
-    get USER_ENDPOINT() {
-        return `${this.AUTH_BASE_URL}/v1/api/user`;
+    get USER_INFO_ENDPOINT() {
+        return `${this.AUTH_BASE_URL}/user/info`;
     },
     get APP_SETTINGS_ENDPOINT() {
         return `${this.MOVIES_BASE_URL}/v1/api/settings`;
@@ -206,10 +206,10 @@ class AccountSettingsManager {
                 throw new Error('No access token found');
             }
 
-            const response = await fetch(API_CONFIG.USER_ENDPOINT, {
+            const response = await fetch(API_CONFIG.USER_INFO_ENDPOINT, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `${tokenData.tokenType} ${tokenData.accessToken}`,
+                    'Authorization': `Bearer ${tokenData.accessToken}`,
                     'Content-Type': 'application/json'
                 }
             });
@@ -223,7 +223,13 @@ class AccountSettingsManager {
                 throw new Error(`Failed to load user data: ${response.status}`);
             }
 
-            this.currentUserData = await response.json();
+            const userData = await response.json();
+            // Map the response to our internal structure
+            this.currentUserData = {
+                firstName: userData.name || '',
+                lastName: userData.surname || '',
+                email: userData.email || ''
+            };
             this.originalData = { ...this.currentUserData };
             this.populateForm();
             
@@ -334,15 +340,17 @@ class AccountSettingsManager {
                 throw new Error('No access token found');
             }
 
+            // Map form data to API structure
             const updateData = {
-                firstName: this.firstNameInput.value.trim(),
-                lastName: this.lastNameInput.value.trim()
+                name: this.firstNameInput.value.trim(),
+                surname: this.lastNameInput.value.trim()
             };
 
-            const response = await fetch(API_CONFIG.USER_ENDPOINT, {
+            // Assume PUT endpoint follows same pattern as GET
+            const response = await fetch(API_CONFIG.USER_INFO_ENDPOINT, {
                 method: 'PUT',
                 headers: {
-                    'Authorization': `${tokenData.tokenType} ${tokenData.accessToken}`,
+                    'Authorization': `Bearer ${tokenData.accessToken}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(updateData)
@@ -359,9 +367,8 @@ class AccountSettingsManager {
                 throw new Error(errorData.message || `Failed to update profile: ${response.status}`);
             }
 
-            const updatedUser = await response.json();
-            this.currentUserData = updatedUser;
-            this.originalData = { ...updatedUser };
+            // Reload user data to get the updated information
+            await this.loadUserData();
             
             this.showMessage('Profile updated successfully!', 'success');
             this.checkForChanges();

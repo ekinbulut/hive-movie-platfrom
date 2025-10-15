@@ -1,10 +1,10 @@
 // API Configuration - Environment aware
 const API_CONFIG = {
     AUTH_BASE_URL: window.location.hostname === 'localhost' 
-        ? 'http://localhost:8082' 
+        ? 'http://localhost:5188' 
         : 'http://hive-idm:8082',
     MOVIES_BASE_URL: window.location.hostname === 'localhost' 
-        ? 'http://localhost:8080' 
+        ? 'http://localhost:5154' 
         : 'http://hive-app:8080',
     get MOVIES_ENDPOINT() {
         return `${this.MOVIES_BASE_URL}/v1/api/movies`;

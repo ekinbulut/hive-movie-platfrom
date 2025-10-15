@@ -1,7 +1,7 @@
 // API Configuration - Environment aware
 const API_CONFIG = {
     AUTH_BASE_URL: window.location.hostname === 'localhost' 
-        ? 'http://localhost:8082' 
+        ? 'http://localhost:5188' 
         : 'http://hive-idm:8082',
     get AUTH_LOGIN_ENDPOINT() {
         return `${this.AUTH_BASE_URL}/auth/login`;
