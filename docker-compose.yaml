@@ -47,7 +47,7 @@ services:
     networks:
       - hive-network
     healthcheck:
-      test: ["CMD", "test", "-d", "/app/shared"]
+      test: [ "CMD", "test", "-d", "/app/shared" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -98,10 +98,76 @@ services:
       - hive-network
     labels:
       - "io.containers.autoupdate=registry"
+      -
+  postgres:
+    image: docker.io/postgres:15-alpine
+    container_name: postgres_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: myapp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - hive-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  
+  redis:
+    image: docker.io/redis:7-alpine
+    container_name: redis_cache
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass 181985
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - hive-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  rabbitmq:
+    image: docker.io/rabbitmq:4.1.4-management-alpine
+    container_name: rabbitmq_broker
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+      RABBITMQ_DEFAULT_VHOST: /
+    ports:
+      - "5672:5672"    # AMQP port
+      - "15672:15672"  # Management UI port
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - hive-network
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 
 volumes:
   jellyfin-cache:
   jellyfin-config:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
 
 networks:
   hive-network:
