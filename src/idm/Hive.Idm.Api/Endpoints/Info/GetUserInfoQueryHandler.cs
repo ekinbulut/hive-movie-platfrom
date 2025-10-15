@@ -3,19 +3,16 @@ using Domain.Interfaces;
 
 namespace Hive.Idm.Api.Endpoints.Info;
 
-public class GetUserInfoQueryHandler(IUserRepository userRepository) : IQueryHandler<GetUserInfoQuery, GetUserInfoResponse>
+public class GetUserInfoQueryHandler(IUserRepository userRepository) : IQueryHandler<GetUserInfoQuery, GetUserInfoResponse?>
 {
-    public async Task<GetUserInfoResponse> HandleAsync(GetUserInfoQuery query,
+    public async Task<GetUserInfoResponse?> HandleAsync(GetUserInfoQuery query,
         CancellationToken cancellationToken = default)
     {
         var user = await userRepository.GetByIdAsync(query.UserId);
         
-        if (user == null)
-        {
-            return new GetUserInfoResponse(string.Empty, string.Empty, string.Empty);
-        }
-        
-        return new GetUserInfoResponse(user.FirstName ?? string.Empty, user.LastName ?? string.Empty, user.Email ?? string.Empty);
-
+        return user == null ? null 
+            : new GetUserInfoResponse(user.FirstName ?? string.Empty, 
+                user.LastName ?? string.Empty, 
+                user.Email);
     }
 }

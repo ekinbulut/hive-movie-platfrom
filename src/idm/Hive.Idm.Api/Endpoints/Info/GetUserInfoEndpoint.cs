@@ -27,6 +27,13 @@ public class GetUserInfoEndpoint(IMediator mediator) : EndpointWithoutRequest<Ge
         
         var query = new GetUserInfoQuery { UserId = userId };
         var response = await mediator.SendAsync(query, ct);
+
+        if (response == null)
+        {
+            await Send.NotFoundAsync(ct);
+            return;
+        }
+        
         await Send.OkAsync(response, ct);
     }
 }

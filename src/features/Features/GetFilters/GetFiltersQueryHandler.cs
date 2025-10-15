@@ -10,12 +10,12 @@ public class GetFiltersQueryHandler(IMovieRepository movieRepository) : IQueryHa
     {
         var years = await movieRepository.GetFiltersAsync();
         
-        return await Task.FromResult(new GetFiltersResponse()
+        return new GetFiltersResponse()
         {
             Filters = new Filters()
             {
                 Years = years
             }
-        });
+        };
     }
 }
