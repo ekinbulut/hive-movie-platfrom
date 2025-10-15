@@ -7,17 +7,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Integration.Services.JellyFin;
 
-public class JellyFinService(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<JellyFinService> logger)
+public class JellyFinService(IHttpClientFactory httpClientFactory, ILogger<JellyFinService> logger, string apiKey = "", string baseUrl = "")
     : IJellyFinService
 {
-    private readonly string _baseUrl = configuration["JellyFin:BaseUrl"]
-                                       ?? Environment.GetEnvironmentVariable("JELLYFIN_BASE_URL")
-                                       ?? throw new ArgumentNullException("JellyFin:BaseUrl not configured");
-
-    private readonly string _apiKey = configuration["JellyFin:ApiKey"]
-                                      ?? Environment.GetEnvironmentVariable("JELLYFIN_ACCESS_TOKEN")
-                                      ?? throw new ArgumentNullException("JellyFin:ApiKey not configured");
-
     private static readonly SemaphoreSlim _throttle = new SemaphoreSlim(2); // Limit to 2 concurrent requests
     private static readonly TimeSpan _throttleDelay = TimeSpan.FromMilliseconds(500); // Optional delay between requests
 
@@ -29,7 +21,7 @@ public class JellyFinService(IHttpClientFactory httpClientFactory, IConfiguratio
             await Task.Delay(_throttleDelay); // Throttle delay
             var httpClient = httpClientFactory.CreateClient();
             var url =
-                $"{_baseUrl}/Search/Hints?api_key={_apiKey}&SearchTerm={Uri.EscapeDataString(movieName)}&IncludeItemTypes=Movie&Limit=10";
+                $"{baseUrl}/Search/Hints?api_key={apiKey}&SearchTerm={Uri.EscapeDataString(movieName)}&IncludeItemTypes=Movie&Limit=10";
 
             var response = await httpClient.GetAsync(url);
             response.EnsureSuccessStatusCode();

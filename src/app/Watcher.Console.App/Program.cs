@@ -52,6 +52,14 @@ var builder = Host.CreateDefaultBuilder(args)
             ctx.Configuration.GetConnectionString("RabbitMq")
             ?? Environment.GetEnvironmentVariable("RABBITMQ__CONNECTION")
             ?? "amqp://guest:guest@localhost:5672";
+        
+        var jellyfinUrl = ctx.Configuration["JellyFin:BaseUrl"]
+                          ?? Environment.GetEnvironmentVariable("JELLYFIN_BASE_URL")
+                          ?? throw new ArgumentNullException("JellyFin:BaseUrl not configured");
+        
+        var jellyfinApiKey = ctx.Configuration["JellyFin:ApiKey"]
+                              ?? Environment.GetEnvironmentVariable("JELLYFIN_ACCESS_TOKEN")
+                              ?? throw new ArgumentNullException("JellyFin:ApiKey not configured");
 
         var inputQueue = "hive-watcher";
         services.AutoRegisterHandlersFromAssemblyOf<MessageHandler>();
@@ -62,7 +70,12 @@ var builder = Host.CreateDefaultBuilder(args)
 
         services.AddHttpClient();
         services.AddTransient<ITmdbApiService, TmdbApiService>();
-        services.AddTransient<IJellyFinService, JellyFinService>();
+        services.AddTransient<IJellyFinService, JellyFinService>(sp =>
+            new JellyFinService(
+                sp.GetRequiredService<IHttpClientFactory>(),
+                sp.GetRequiredService<ILogger<JellyFinService>>(),
+                jellyfinApiKey,
+                jellyfinUrl));
         // Register watcher services with proper buffer management
         services.AddTransient<IFileSystemWatcherFactory, FileSystemWatcherFactory>();
         services.AddTransient<IFileSystemService, FileSystemService>();
