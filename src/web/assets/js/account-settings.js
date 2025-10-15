@@ -11,8 +11,8 @@ const API_CONFIG = {
     get USER_INFO_ENDPOINT() {
         return `${this.AUTH_BASE_URL}/user/info`;
     },
-    get APP_SETTINGS_ENDPOINT() {
-        return `${this.MOVIES_BASE_URL}/v1/api/settings`;
+    get USER_CONFIGURATION_ENDPOINT() {
+        return `${this.AUTH_BASE_URL}/user/configuration`;
     }
 };
 
@@ -109,8 +109,9 @@ class AccountSettingsManager {
         // App Settings Form elements
         this.appSettingsForm = document.getElementById('appSettingsForm');
         this.mediaFolderPathInput = document.getElementById('mediaFolderPath');
+        this.jellyfinBaseUrlInput = document.getElementById('jellyfinBaseUrl');
+        this.jellyfinApiKeyInput = document.getElementById('jellyfinApiKey');
         this.appSaveBtn = document.getElementById('appSaveBtn');
-        this.appCancelBtn = document.getElementById('appCancelBtn');
         this.appBtnText = document.querySelector('#appSaveBtn .btn-text');
         this.appLoadingSpinner = document.querySelector('#appSaveBtn .loading-spinner');
         
@@ -150,17 +151,9 @@ class AccountSettingsManager {
             this.accountForm.addEventListener('submit', (e) => this.handleFormSubmit(e));
         }
         
-        if (this.cancelBtn) {
-            this.cancelBtn.addEventListener('click', () => this.resetForm());
-        }
-        
         // App Settings Form events
         if (this.appSettingsForm) {
             this.appSettingsForm.addEventListener('submit', (e) => this.handleAppSettingsSubmit(e));
-        }
-        
-        if (this.appCancelBtn) {
-            this.appCancelBtn.addEventListener('click', () => this.resetAppSettingsForm());
         }
         
         // Input change detection
@@ -170,9 +163,11 @@ class AccountSettingsManager {
             }
         });
         
-        if (this.mediaFolderPathInput) {
-            this.mediaFolderPathInput.addEventListener('input', () => this.checkForAppSettingsChanges());
-        }
+        [this.mediaFolderPathInput, this.jellyfinBaseUrlInput, this.jellyfinApiKeyInput].forEach(input => {
+            if (input) {
+                input.addEventListener('input', () => this.checkForAppSettingsChanges());
+            }
+        });
         
         // Close dropdown when clicking outside
         document.addEventListener('click', () => {
@@ -261,10 +256,10 @@ class AccountSettingsManager {
                 throw new Error('No access token found');
             }
 
-            const response = await fetch(API_CONFIG.APP_SETTINGS_ENDPOINT, {
+            const response = await fetch(API_CONFIG.USER_CONFIGURATION_ENDPOINT, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `${tokenData.tokenType} ${tokenData.accessToken}`,
+                    'Authorization': `Bearer ${tokenData.accessToken}`,
                     'Content-Type': 'application/json'
                 }
             });
@@ -277,7 +272,11 @@ class AccountSettingsManager {
                 }
                 // If settings don't exist, use defaults
                 if (response.status === 404) {
-                    this.currentAppSettings = { mediaFolderPath: '' };
+                    this.currentAppSettings = { 
+                        mediaFolder: '',
+                        jellyFinServer: '',
+                        jellyFinApiKey: ''
+                    };
                     this.originalAppSettings = { ...this.currentAppSettings };
                     this.populateAppSettingsForm();
                     return;
@@ -285,14 +284,23 @@ class AccountSettingsManager {
                 throw new Error(`Failed to load app settings: ${response.status}`);
             }
 
-            this.currentAppSettings = await response.json();
+            const responseData = await response.json();
+            this.currentAppSettings = responseData.settings || {
+                mediaFolder: '',
+                jellyFinServer: '',
+                jellyFinApiKey: ''
+            };
             this.originalAppSettings = { ...this.currentAppSettings };
             this.populateAppSettingsForm();
             
         } catch (error) {
             console.error('Error loading app settings:', error);
             // Use defaults if loading fails
-            this.currentAppSettings = { mediaFolderPath: '' };
+            this.currentAppSettings = { 
+                mediaFolder: '',
+                jellyFinServer: '',
+                jellyFinApiKey: ''
+            };
             this.originalAppSettings = { ...this.currentAppSettings };
             this.populateAppSettingsForm();
         }
@@ -301,7 +309,13 @@ class AccountSettingsManager {
     populateAppSettingsForm() {
         if (this.currentAppSettings) {
             if (this.mediaFolderPathInput) {
-                this.mediaFolderPathInput.value = this.currentAppSettings.mediaFolderPath || '';
+                this.mediaFolderPathInput.value = this.currentAppSettings.mediaFolder || '';
+            }
+            if (this.jellyfinBaseUrlInput) {
+                this.jellyfinBaseUrlInput.value = this.currentAppSettings.jellyFinServer || '';
+            }
+            if (this.jellyfinApiKeyInput) {
+                this.jellyfinApiKeyInput.value = this.currentAppSettings.jellyFinApiKey || '';
             }
         }
         this.checkForAppSettingsChanges();
@@ -321,7 +335,9 @@ class AccountSettingsManager {
         if (!this.originalAppSettings || !this.appSaveBtn) return;
         
         const hasChanges = 
-            this.mediaFolderPathInput.value.trim() !== (this.originalAppSettings.mediaFolderPath || '');
+            this.mediaFolderPathInput.value.trim() !== (this.originalAppSettings.mediaFolder || '') ||
+            this.jellyfinBaseUrlInput.value.trim() !== (this.originalAppSettings.jellyFinServer || '') ||
+            this.jellyfinApiKeyInput.value.trim() !== (this.originalAppSettings.jellyFinApiKey || '');
         
         this.appSaveBtn.disabled = !hasChanges;
     }
@@ -381,11 +397,6 @@ class AccountSettingsManager {
         }
     }
 
-    resetForm() {
-        this.populateForm();
-        this.hideMessage();
-    }
-
     async handleAppSettingsSubmit(e) {
         e.preventDefault();
         
@@ -401,13 +412,15 @@ class AccountSettingsManager {
             }
 
             const updateData = {
-                mediaFolderPath: this.mediaFolderPathInput.value.trim()
+                jellyFinServer: this.jellyfinBaseUrlInput.value.trim(),
+                jellyFinApiKey: this.jellyfinApiKeyInput.value.trim(),
+                mediaFolder: this.mediaFolderPathInput.value.trim()
             };
 
-            const response = await fetch(API_CONFIG.APP_SETTINGS_ENDPOINT, {
-                method: 'PUT',
+            const response = await fetch(API_CONFIG.USER_CONFIGURATION_ENDPOINT, {
+                method: 'POST',
                 headers: {
-                    'Authorization': `${tokenData.tokenType} ${tokenData.accessToken}`,
+                    'Authorization': `Bearer ${tokenData.accessToken}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(updateData)
@@ -424,12 +437,19 @@ class AccountSettingsManager {
                 throw new Error(errorData.message || `Failed to update app settings: ${response.status}`);
             }
 
-            const updatedSettings = await response.json();
-            this.currentAppSettings = updatedSettings;
-            this.originalAppSettings = { ...updatedSettings };
+            const responseText = await response.text();
+            const isSuccess = responseText === 'true' || responseText.toLowerCase() === 'true';
             
-            this.showAppMessage('App settings updated successfully!', 'success');
-            this.checkForAppSettingsChanges();
+            if (isSuccess) {
+                // Update our local state
+                this.currentAppSettings = updateData;
+                this.originalAppSettings = { ...updateData };
+                
+                this.showAppMessage('App settings updated successfully!', 'success');
+                this.checkForAppSettingsChanges();
+            } else {
+                throw new Error('Settings update failed');
+            }
             
         } catch (error) {
             console.error('Error updating app settings:', error);
@@ -437,11 +457,6 @@ class AccountSettingsManager {
         } finally {
             this.setAppLoading(false);
         }
-    }
-
-    resetAppSettingsForm() {
-        this.populateAppSettingsForm();
-        this.hideAppMessage();
     }
 
     setLoading(isLoading) {

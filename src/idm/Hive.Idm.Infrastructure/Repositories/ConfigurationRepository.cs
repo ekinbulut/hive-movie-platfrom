@@ -19,9 +19,15 @@ public class ConfigurationRepository(IdmDbContext context) : IConfigurationRepos
         return context.SaveChangesAsync(cancellationToken).ContinueWith(t => t.Result > 0, cancellationToken);
     }
 
-    public Task<bool> UpdateConfigurationAsync(Configuration configuration, CancellationToken cancellationToken = default)
+    public async Task<bool> UpdateConfigurationAsync(Configuration configuration, CancellationToken cancellationToken = default)
     {
+        var exists = await context.Configurations.AnyAsync(c => c.Id == configuration.Id, cancellationToken);
+    
+        if (!exists)
+            return false;
+
+        configuration.UpdatedAt = DateTime.UtcNow;
         context.Configurations.Update(configuration);
-        return context.SaveChangesAsync(cancellationToken).ContinueWith(t => t.Result > 0, cancellationToken);
+        return await context.SaveChangesAsync(cancellationToken) > 0;
     }
 }
