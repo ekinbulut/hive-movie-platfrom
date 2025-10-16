@@ -11,7 +11,6 @@ WORKDIR /src
 
 # Copy project files and restore as distinct layers
 COPY ["src/idm/Hive.Idm.Api/Hive.Idm.Api.csproj", "src/idm/Hive.Idm.Api/"]
-COPY ["src/idm/Hive.Idm.Infrastructure/Hive.Idm.Infrastructure.csproj", "src/idm/Hive.Idm.Infrastructure/"]
 COPY src/domain/Domain/Domain.csproj src/domain/Domain/
 COPY src/features/Features/Features.csproj src/features/Features/
 COPY src/Infrastructure/Infrastructure/Infrastructure.csproj src/Infrastructure/Infrastructure/
