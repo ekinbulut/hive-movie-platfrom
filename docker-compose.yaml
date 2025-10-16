@@ -35,7 +35,7 @@ services:
     container_name: hive-watcher
     command: [ "--watch", "/app/shared" ]
     volumes:
-      - "/home/user/shared/Plex/Shared Movies:/app/shared"
+      - "/home/user/shared:/mnt/host"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - JELLYFIN_BASE_URL=http://192.168.1.112:8096
@@ -47,7 +47,7 @@ services:
     networks:
       - hive-network
     healthcheck:
-      test: [ "CMD", "test", "-d", "/app/shared" ]
+      test: [ "CMD", "test", "-d", "/mnt/host" ]
       interval: 30s
       timeout: 10s
       retries: 3

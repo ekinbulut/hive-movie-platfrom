@@ -8,6 +8,7 @@
  * Reviewed by: Ekin BULUT
  */
 
+using Domain.Events;
 using Domain.Interfaces;
 using Infrastructure.Database.Extensions;
 using Infrastructure.Integration.Services;
@@ -63,7 +64,14 @@ var builder = Host.CreateDefaultBuilder(args)
         var inputQueue = "hive-watcher";
         services.AutoRegisterHandlersFromAssemblyOf<MessageHandler>();
 
-        services.AddMessaging(rabbitConn, inputQueue, 1);
+        // Configure Rebus with routing for multiple queues
+        services.AddMessagingWithRouting(rabbitConn, inputQueue, routing =>
+        {
+            // Route WatchPathChangedEvent to hive-api queue
+            routing.Map<WatchPathChangedEvent>("hive-api.path-changed");
+            routing.Map<FileFoundEvent>("hive-watcher");
+            // FileFoundEvent uses default queue (hive-watcher)
+        }, workers: 1);
         
         services.AddDbContext(ctx.Configuration);
 
@@ -79,6 +87,7 @@ var builder = Host.CreateDefaultBuilder(args)
         services.AddTransient<IFileSystemWatcherFactory, FileSystemWatcherFactory>();
         services.AddTransient<IFileSystemService, FileSystemService>();
         services.AddTransient<IConsoleLogger, ConsoleLogger>();
+        services.AddSingleton<IWatcherManager, WatcherManager>();
     });
 
 using var host = builder.Build();
@@ -124,6 +133,11 @@ logger.LogInformation("");
 var bus = host.Services.GetRequiredService<Rebus.Bus.IBus>();
 await bus.Subscribe<FileFoundEvent>();
 
+await bus.Subscribe<WatchPathChangedEvent>();
+
+// Subscribe to WatchPathChangedEvent from a different queue (e.g., from API)
+//await bus.Advanced.Topics.Subscribe("hive-api.path-changed");
+
 // --- Define a lightweight publish DTO that implements your abstraction -------
 var defaultCorrelationId = Guid.NewGuid().ToString("N");
 
@@ -147,7 +161,7 @@ var watcher = new Watcher.Console.App.Services.Watcher(
 watcher.FileContentDiscovered += (s, e) =>
 {
     
-    logger.LogInformation($"File Discovered: {e.Path} (Size: {e.Size }  bytes)");
+    logger.LogInformation("File Discovered: {Path} (Size: {Size} bytes)", e.Path, e.Size);
 
     // THIS IS OVER ENGINEERING !!
     var fileEvent = new FileFoundEvent
@@ -157,10 +171,10 @@ watcher.FileContentDiscovered += (s, e) =>
         CausationId = defaultCorrelationId
     };
 
-    bus.Publish(fileEvent);
+    bus.Send(fileEvent);
 };
    
-watcher.Start();
+//watcher.Start();
 // watcher.PerformInitialScan();
 
 var cancellationTokenSource = new CancellationTokenSource();
@@ -218,5 +232,5 @@ logger.LogWarning("Stopping watcher...");
 watcher.Stop();
 
 // Stop Rebus/Host
-await host.StopAsync();
 
+await host.StopAsync();

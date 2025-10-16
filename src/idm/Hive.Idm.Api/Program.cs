@@ -1,10 +1,13 @@
 using System.Reflection;
 using System.Text;
+using Domain.Events;
 using Domain.Extension;
 using FastEndpoints;
 using Hive.Idm.Api.Extensions;
+using Infrastructure.Messaging.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Rebus.Config;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -60,6 +63,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 builder.Services.AddFastEndpoints();
+
+// Add Rebus
+var rabbitConn =
+    builder.Configuration.GetConnectionString("RabbitMq")
+    ?? Environment.GetEnvironmentVariable("RABBITMQ__CONNECTION")
+    ?? "amqp://guest:guest@localhost:5672";
+
+var inputQueue = "hive-api.path-changed";
+
+// Configure Rebus with routing for multiple queues
+builder.Services.AddMessagingWithRouting(rabbitConn, inputQueue, routing =>
+{
+    // Route WatchPathChangedEvent to hive-api queue
+    routing.Map<WatchPathChangedEvent>("hive-api.path-changed");
+    // FileFoundEvent uses default queue (hive-watcher)
+}, workers: 0);
+
 
 var app = builder.Build();
 
