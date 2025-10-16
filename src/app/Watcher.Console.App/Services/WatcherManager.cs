@@ -84,7 +84,7 @@ public class WatcherManager : IWatcherManager, IDisposable
 
             var fileEvent = new FileFoundEvent
             {
-                UserId = userId,
+                UserId = Guid.Parse(userId),
                 FilePaths = new List<string> { eventArgs.Path },
                 MetaData = new MetaData(eventArgs.Name, eventArgs.Size, eventArgs.Extension),
                 CausationId = _defaultCorrelationId

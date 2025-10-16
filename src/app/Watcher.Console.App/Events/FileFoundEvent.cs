@@ -15,5 +15,5 @@ public class FileFoundEvent : BaseEvent, IMessage
     public string? CausationId { get; init; }
 
     public MetaData MetaData { get; set; }
-    public string UserId { get; set; }
+    public Guid UserId { get; set; }
 }

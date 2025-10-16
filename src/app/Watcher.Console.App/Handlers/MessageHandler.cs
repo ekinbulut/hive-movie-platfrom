@@ -39,7 +39,8 @@ public class MessageHandler(IMovieRepository movieRepository, ITmdbApiService tm
                 Image = imagePath,
                 HashValue = hashValue,
                 ReleaseDate = year,
-                JellyFinId = jellyFinMovieId
+                JellyFinId = jellyFinMovieId,
+                UserId = message.UserId
             });
         }
         

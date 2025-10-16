@@ -69,6 +69,7 @@ var builder = Host.CreateDefaultBuilder(args)
         {
             // Route WatchPathChangedEvent to hive-api queue
             routing.Map<WatchPathChangedEvent>("hive-api.path-changed");
+            routing.Map<FileFoundEvent>("hive-watcher");
             // FileFoundEvent uses default queue (hive-watcher)
         }, workers: 1);
         

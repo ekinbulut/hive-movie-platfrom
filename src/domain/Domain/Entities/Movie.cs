@@ -1,4 +1,6 @@
-﻿namespace Domain.Entities;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Domain.Entities;
 
 public partial class Movie
 {
@@ -24,5 +26,8 @@ public partial class Movie
 
     public int? ReleaseDate { get; set; }
     public string? JellyFinId { get; set; }
+    
+    [Column("user_id")]
+    public Guid UserId { get; set; }
     
 }
