@@ -9,8 +9,8 @@ public class GetAllMoviesQueryHandler(IMovieRepository movieRepository)
 {
     public async Task<GetMovieResponse> HandleAsync(GetAllMoviesQuery query, CancellationToken cancellationToken = default)
     {
-        var movies = await movieRepository.GetAllMoviesAsync(query.PageNumber, query.PageSize);
-        var total = await movieRepository.GetTotalMoviesCountAsync();
+        var movies = await movieRepository.GetAllMoviesAsync(query.PageNumber, query.PageSize, query.UserId);
+        var total = await movieRepository.GetTotalMoviesCountAsync(query.UserId);
         
         return await Task.FromResult(new GetMovieResponse()
         {

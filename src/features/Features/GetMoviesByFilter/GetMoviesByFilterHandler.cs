@@ -9,8 +9,8 @@ public class GetMoviesByFilterHandler(IMovieRepository movieRepository) : IQuery
 {
     public async Task<GetMoviesByFilterResponse> HandleAsync(GetMoviesByFilterQuery query, CancellationToken cancellationToken = default)
     {
-        var movies = await movieRepository.GetMoviesByFilterAsync(query.Year, query.PageNumber, query.PageSize);
-        var total = await movieRepository.GetTotalMoviesCountByFilterAsync(query.Year);
+        var movies = await movieRepository.GetMoviesByFilterAsync(query.Year, query.PageNumber, query.PageSize, query.UserId);
+        var total = await movieRepository.GetTotalMoviesCountByFilterAsync(query.Year, query.UserId);
 
         return await Task.FromResult(new GetMoviesByFilterResponse()
         {

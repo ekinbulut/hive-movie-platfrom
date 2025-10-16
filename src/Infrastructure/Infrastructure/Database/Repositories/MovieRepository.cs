@@ -47,31 +47,31 @@ public class MovieRepository(HiveDbContext context) : IMovieRepository
         }
     }
 
-    public async Task<int> GetTotalMoviesCountAsync()
+    public async Task<int> GetTotalMoviesCountAsync(Guid userId)
     {
-        return await context.Movies.CountAsync();
+        return await context.Movies.CountAsync(x=> x.UserId == userId);
     }
 
-    public async Task<List<Movie>> GetMoviesByFilterAsync(int? queryYear, int pageNumber, int pageSize)
+    public async Task<List<Movie>> GetMoviesByFilterAsync(int? queryYear, int pageNumber, int pageSize, Guid userId)
     {
         return await context.Movies
-            .Where(m => !queryYear.HasValue || m.ReleaseDate.HasValue && m.ReleaseDate == queryYear.Value)
+            .Where(m => !queryYear.HasValue || m.ReleaseDate.HasValue && m.ReleaseDate == queryYear.Value && m.UserId == userId)
             .Skip((pageNumber - 1) * pageSize).Take(pageSize)
             .ToListAsync();
     }
 
-    public async Task<int> GetTotalMoviesCountByFilterAsync(int? queryYear)
+    public async Task<int> GetTotalMoviesCountByFilterAsync(int? queryYear, Guid userId)
     {
         return await context.Movies
             .Where(m =>
-                !queryYear.HasValue || m.ReleaseDate.HasValue && m.ReleaseDate == queryYear.Value)
+                !queryYear.HasValue || m.ReleaseDate.HasValue && m.ReleaseDate == queryYear.Value && m.UserId == userId)
             .CountAsync();
     }
 
-    public async Task<List<int>> GetFiltersAsync()
+    public async Task<List<int>> GetFiltersAsync(Guid userId)
     {
         return await context.Movies
-            .Where(m => m.ReleaseDate.HasValue && m.ReleaseDate > 0)
+            .Where(m => m.ReleaseDate.HasValue && m.ReleaseDate > 0 && m.UserId == userId)
             .Select(m => m.ReleaseDate.Value)
             .Distinct()
             .OrderByDescending(y => y)
@@ -79,9 +79,11 @@ public class MovieRepository(HiveDbContext context) : IMovieRepository
     }
 
     // Add a method to get all movies with pagination
-    public async Task<List<Movie>> GetAllMoviesAsync(int pageNumber, int pageSize)
+    public async Task<List<Movie>> GetAllMoviesAsync(int pageNumber, int pageSize, Guid userId)
     {
-        return await context.Movies.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+        return await context.Movies
+            .Where(m =>m.UserId == userId)
+            .Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
     }
 
 }

@@ -8,7 +8,7 @@ public class GetFiltersQueryHandler(IMovieRepository movieRepository) : IQueryHa
 {
     public async Task<GetFiltersResponse> HandleAsync(GetFiltersQuery query, CancellationToken cancellationToken = default)
     {
-        var years = await movieRepository.GetFiltersAsync();
+        var years = await movieRepository.GetFiltersAsync(query.UserId);
         
         return new GetFiltersResponse()
         {

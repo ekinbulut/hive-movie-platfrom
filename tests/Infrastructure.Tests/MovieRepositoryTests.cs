@@ -171,17 +171,19 @@ public class MovieRepositoryTests
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
     
+        var userId = Guid.CreateVersion7();
+        
         using var context = new HiveDbContext(options);
         context.Movies.AddRange(
-            new Movie { Name = "Movie 1" },
-            new Movie { Name = "Movie 2" },
-            new Movie { Name = "Movie 3" }
+            new Movie { Name = "Movie 1", UserId = userId },
+            new Movie { Name = "Movie 2", UserId = userId },
+            new Movie { Name = "Movie 3", UserId = userId}
         );
         context.SaveChanges();
     
         var repository = new MovieRepository(context);
     
-        var result = repository.GetAllMoviesAsync(2, 1).GetAwaiter().GetResult();
+        var result = repository.GetAllMoviesAsync(2, 1, userId).GetAwaiter().GetResult();
     
         Assert.Single(result);
         Assert.Equal("Movie 2", result[0].Name);
@@ -195,15 +197,18 @@ public class MovieRepositoryTests
             .Options;
     
         using var context = new HiveDbContext(options);
+        
+        var userId = Guid.CreateVersion7();
+        
         context.Movies.AddRange(
-            new Movie { Name = "Movie 1" },
-            new Movie { Name = "Movie 2" }
+            new Movie { Name = "Movie 1", UserId = userId },
+            new Movie { Name = "Movie 2", UserId = userId }
         );
         context.SaveChanges();
     
         var repository = new MovieRepository(context);
     
-        var result = repository.GetAllMoviesAsync(3, 2).GetAwaiter().GetResult();
+        var result = repository.GetAllMoviesAsync(3, 2, userId).GetAwaiter().GetResult();
     
         Assert.Empty(result);
     }
