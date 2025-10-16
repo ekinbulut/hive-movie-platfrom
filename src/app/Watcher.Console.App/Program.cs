@@ -8,6 +8,7 @@
  * Reviewed by: Ekin BULUT
  */
 
+using Domain.Events;
 using Domain.Interfaces;
 using Infrastructure.Database.Extensions;
 using Infrastructure.Integration.Services;
@@ -63,7 +64,13 @@ var builder = Host.CreateDefaultBuilder(args)
         var inputQueue = "hive-watcher";
         services.AutoRegisterHandlersFromAssemblyOf<MessageHandler>();
 
-        services.AddMessaging(rabbitConn, inputQueue, 1);
+        // Configure Rebus with routing for multiple queues
+        services.AddMessagingWithRouting(rabbitConn, inputQueue, routing =>
+        {
+            // Route WatchPathChangedEvent to hive-api queue
+            routing.Map<WatchPathChangedEvent>("hive-api.path-changed");
+            // FileFoundEvent uses default queue (hive-watcher)
+        }, workers: 1);
         
         services.AddDbContext(ctx.Configuration);
 
@@ -161,7 +168,7 @@ watcher.FileContentDiscovered += (s, e) =>
         CausationId = defaultCorrelationId
     };
 
-    bus.Publish(fileEvent);
+    bus.Send(fileEvent);
 };
    
 //watcher.Start();

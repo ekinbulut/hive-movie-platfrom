@@ -29,27 +29,28 @@ public class WatcherManager : IWatcherManager, IDisposable
         _defaultCorrelationId = Guid.NewGuid().ToString("N");
     }
 
-    public async Task ChangeWatchPathAsync(string newPath, string userId)
+    public async Task ChangeWatchPathAsync(string newPath, Guid userId)
     {
+        var id = userId.ToString();
         if (!_fileSystemService.DirectoryExists(newPath))
         {
-            _logger.LogWarning("Path does not exist: {Path} for user {UserId}", newPath, userId);
+            _logger.LogWarning("Path does not exist: {Path} for user {UserId}", newPath, id);
             throw new DirectoryNotFoundException($"The path '{newPath}' does not exist.");
         }
 
         // Stop existing watcher for this user if exists
-        if (_watchers.TryGetValue(userId, out var existingWatcher))
+        if (_watchers.TryGetValue(id, out var existingWatcher))
         {
-            _logger.LogInformation("Stopping existing watcher for user {UserId}", userId);
+            _logger.LogInformation("Stopping existing watcher for user {UserId}", id);
             existingWatcher.Stop();
             existingWatcher.Dispose();
-            _watchers.TryRemove(userId, out _);
+            _watchers.TryRemove(id, out _);
         }
 
         // Start new watcher with the new path
-        StartWatcher(newPath, userId);
+        StartWatcher(newPath, id);
 
-        _logger.LogInformation("Changed watch path to {Path} for user {UserId}", newPath, userId);
+        _logger.LogInformation("Changed watch path to {Path} for user {UserId}", newPath, id);
         
         await Task.CompletedTask;
     }
