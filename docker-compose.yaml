@@ -33,7 +33,6 @@ services:
       dockerfile: ./src/app/Watcher.Console.App/Dockerfile
     image: localhost/hive-watcher:latest
     container_name: hive-watcher
-    command: [ "--watch", "/app/shared" ]
     volumes:
       - "/home/user/shared:/mnt/host"
     environment:
