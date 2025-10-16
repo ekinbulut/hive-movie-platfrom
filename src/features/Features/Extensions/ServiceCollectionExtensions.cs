@@ -1,4 +1,3 @@
-using Domain.Extension;
 using FastEndpoints;
 using Microsoft.Extensions.DependencyInjection;
 

@@ -1,9 +1,6 @@
 using System.Collections.Concurrent;
-using System.IO;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Watcher.Console.App.Abstracts;
-using Watcher.Console.App.Factories;
 using Watcher.Console.App.Models;
 
 namespace Watcher.Console.App.Services;

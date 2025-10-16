@@ -1,7 +1,6 @@
 using System.Text.Json.Serialization;
-using Domain.DTOs;
 
-namespace Infrastructure.DTOs;
+namespace Domain.DTOs;
 
 public class TmdbSearchResultDto
 {

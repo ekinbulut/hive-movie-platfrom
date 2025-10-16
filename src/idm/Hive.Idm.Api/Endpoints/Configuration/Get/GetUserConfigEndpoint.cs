@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using Domain.Abstraction.Mediator;
-using Domain.Entities;
 using FastEndpoints;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 

@@ -1,6 +1,5 @@
 using Domain.Abstraction.Mediator;
 using Domain.Interfaces;
-using Hive.Idm.Api.Endpoints.Configuration.Get;
 
 namespace Hive.Idm.Api.Endpoints.Configuration.Add;
 

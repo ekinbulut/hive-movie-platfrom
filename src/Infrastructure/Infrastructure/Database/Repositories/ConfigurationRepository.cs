@@ -1,12 +1,11 @@
-using System.Text.Json;
 using Domain.Entities;
 using Domain.Interfaces;
-using Hive.Idm.Infrastructure.Data;
+using Infrastructure.Database.Context;
 using Microsoft.EntityFrameworkCore;
 
-namespace Hive.Idm.Infrastructure.Repositories;
+namespace Infrastructure.Database.Repositories;
 
-public class ConfigurationRepository(IdmDbContext context) : IConfigurationRepository
+public class ConfigurationRepository(HiveDbContext context) : IConfigurationRepository
 {
     public Task<Configuration?> GetConfigurationByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {

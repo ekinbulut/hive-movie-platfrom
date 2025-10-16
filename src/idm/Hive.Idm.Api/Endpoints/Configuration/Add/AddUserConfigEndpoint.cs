@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using Domain.Abstraction.Mediator;
 using FastEndpoints;
-using Hive.Idm.Api.Endpoints.Configuration.Get;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace Hive.Idm.Api.Endpoints.Configuration.Add;

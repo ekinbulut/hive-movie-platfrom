@@ -1,5 +1,3 @@
-using System.IO;
-
 namespace Watcher.Console.App.Abstracts;
 
 public interface IFileSystemService

@@ -2,7 +2,6 @@
 using Infrastructure.Database.Context;
 using Infrastructure.Database.Repositories;
 using Microsoft.EntityFrameworkCore;
-using Moq;
 
 namespace Infrastructure.Tests;
 

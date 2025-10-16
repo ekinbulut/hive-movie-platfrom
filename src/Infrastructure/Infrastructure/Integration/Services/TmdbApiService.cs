@@ -2,7 +2,6 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using Domain.DTOs;
 using Domain.Interfaces;
-using Infrastructure.DTOs;
 using Microsoft.Extensions.Configuration;
 
 namespace Infrastructure.Integration.Services;

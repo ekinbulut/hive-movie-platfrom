@@ -1,7 +1,6 @@
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.IO;
 using Watcher.Console.App.Abstracts;
 
 namespace Watcher.Console.App.Services;

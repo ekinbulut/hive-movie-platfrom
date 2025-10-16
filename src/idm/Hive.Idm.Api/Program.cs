@@ -2,10 +2,8 @@ using System.Reflection;
 using System.Text;
 using Domain.Extension;
 using FastEndpoints;
-using Hive.Idm.Infrastructure.Data;
-using Hive.Idm.Infrastructure.Extensions;
+using Hive.Idm.Api.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 

@@ -1,4 +1,3 @@
-using System.IO;
 using Watcher.Console.App.Abstracts;
 
 namespace Watcher.Console.App.Services;

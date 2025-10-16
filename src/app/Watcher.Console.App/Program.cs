@@ -9,7 +9,6 @@
  */
 
 using Domain.Interfaces;
-using Humanizer;
 using Infrastructure.Database.Extensions;
 using Infrastructure.Integration.Services;
 using Infrastructure.Integration.Services.JellyFin;

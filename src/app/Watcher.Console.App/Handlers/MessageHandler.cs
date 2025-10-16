@@ -1,10 +1,8 @@
-using System.Text.RegularExpressions;
 using Common.Crypto;
 using Common.Parser;
 using Domain.Entities;
 using Domain.Interfaces;
 using Infrastructure.Messaging.Handlers;
-using Newtonsoft.Json;
 using Watcher.Console.App.Events;
 
 namespace Watcher.Console.App.Handlers;

@@ -1,5 +1,4 @@
 using Domain.DTOs;
-using Infrastructure.DTOs;
 
 namespace Domain.Interfaces;
 

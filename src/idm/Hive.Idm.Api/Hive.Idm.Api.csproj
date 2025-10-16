@@ -22,7 +22,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\common\Common\Common.csproj" />
-      <ProjectReference Include="..\Hive.Idm.Infrastructure\Hive.Idm.Infrastructure.csproj" />
+      <ProjectReference Include="..\..\Infrastructure\Infrastructure\Infrastructure.csproj" />
     </ItemGroup>
 
 </Project>

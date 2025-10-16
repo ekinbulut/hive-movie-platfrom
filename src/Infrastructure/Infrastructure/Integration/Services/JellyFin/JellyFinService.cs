@@ -1,8 +1,6 @@
 using System.Text.Json;
-using System.Threading;
 using Domain.Interfaces;
 using Infrastructure.Integration.Services.JellyFin.Models;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Integration.Services.JellyFin;

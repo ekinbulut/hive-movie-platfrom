@@ -1,7 +1,5 @@
 using Domain.Abstraction;
 using Infrastructure.Messaging.Contracts;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Watcher.Console.App.Models;
 
 namespace Watcher.Console.App.Events;
