@@ -69,8 +69,7 @@ var builder = Host.CreateDefaultBuilder(args)
         {
             // Route WatchPathChangedEvent to hive-api queue
             routing.Map<WatchPathChangedEvent>("hive-api.path-changed");
-            routing.Map<FileFoundEvent>("hive-watcher");
-            // FileFoundEvent uses default queue (hive-watcher)
+            routing.Map<FileFoundEvent>(inputQueue);
         }, workers: 1);
         
         services.AddDbContext(ctx.Configuration);
@@ -93,89 +92,18 @@ var builder = Host.CreateDefaultBuilder(args)
 using var host = builder.Build();
 await host.StartAsync();
 
-// Create watcher with proper DI services to enable buffer management
-var watcherFactory = host.Services.GetRequiredService<IFileSystemWatcherFactory>();
-var fileSystemService = host.Services.GetRequiredService<IFileSystemService>();
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
 
 logger.LogInformation($"{title} v{appVersion}");
-
-WatcherArguments watcherArgs;
-try
-{
-    watcherArgs = new WatcherArguments(Environment.GetCommandLineArgs());
-}
-catch (Exception ex)
-{
-    logger.LogError(ex.Message);
-    return;
-}
-
-if (watcherArgs.ShowHelp)
-{
-    //write possible arguments
-    logger.LogInformation($"{title} - A simple file system watcher.");
-    logger.LogInformation("Options:");
-    logger.LogInformation("  --watch or -w <folder_to_watch>   Specifies the folder to watch.");
-    logger.LogInformation("  --help                      Displays this help message.");
-    logger.LogInformation("");
-    logger.LogInformation("Usage: Watcher.Console.App --watch <folder_to_watch>");
-    return;
-}
-
-logger.LogInformation("");
-
-logger.LogInformation($"Watching folder: {watcherArgs.FolderToWatch}");
 logger.LogInformation("Press 'q' to quit or Ctrl+C to exit.");
-logger.LogInformation("");
 
 // Resolve Rebus bus through DI
 var bus = host.Services.GetRequiredService<Rebus.Bus.IBus>();
 await bus.Subscribe<FileFoundEvent>();
-
 await bus.Subscribe<WatchPathChangedEvent>();
 
 // Subscribe to WatchPathChangedEvent from a different queue (e.g., from API)
 //await bus.Advanced.Topics.Subscribe("hive-api.path-changed");
-
-// --- Define a lightweight publish DTO that implements your abstraction -------
-var defaultCorrelationId = Guid.NewGuid().ToString("N");
-
-
-
-var watcher = new Watcher.Console.App.Services.Watcher(
-    path: watcherArgs.FolderToWatch,
-    watcherFactory,
-    fileSystemService,
-    logger: logger,                       
-    filter: "*.*",
-    includeSubdirectories: true,
-    allowedExtensions: new[] { ".mkv", ".mov", ".mp4" } // optional
-);
-
-//
-// watcher.Changed += (s, e) => Console.WriteLine($"[Changed] {e.FullPath}");
-// watcher.Renamed += (s, e) => Console.WriteLine($"[Renamed] {e.OldFullPath} -> {e.FullPath}");
-// watcher.Error   += (s, e) => Console.WriteLine($"[Error] {e.GetException().Message}");
-
-watcher.FileContentDiscovered += (s, e) =>
-{
-    
-    logger.LogInformation("File Discovered: {Path} (Size: {Size} bytes)", e.Path, e.Size);
-
-    // THIS IS OVER ENGINEERING !!
-    var fileEvent = new FileFoundEvent
-    {
-        FilePaths = new List<string> { e.Path },
-        MetaData = new MetaData(e.Name, e.Size, e.Extension),
-        CausationId = defaultCorrelationId
-    };
-
-    bus.Send(fileEvent);
-};
-   
-//watcher.Start();
-// watcher.PerformInitialScan();
 
 var cancellationTokenSource = new CancellationTokenSource();
 
@@ -229,7 +157,6 @@ catch (TaskCanceledException)
 }
 
 logger.LogWarning("Stopping watcher...");
-watcher.Stop();
 
 // Stop Rebus/Host
 
