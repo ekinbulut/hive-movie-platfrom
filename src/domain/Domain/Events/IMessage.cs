@@ -1,4 +1,4 @@
-namespace Infrastructure.Messaging.Contracts;
+namespace Domain.Events;
 
 public interface IMessage
 {

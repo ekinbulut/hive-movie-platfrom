@@ -1,3 +1,4 @@
+using Domain.Events;
 using Infrastructure.Messaging.Handlers;
 using Microsoft.Extensions.Logging;
 using Watcher.Console.App.Abstracts;

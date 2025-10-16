@@ -1,3 +1,5 @@
+using Domain.Events;
+
 namespace Infrastructure.Messaging.Contracts;
 
 public record MessageBase(

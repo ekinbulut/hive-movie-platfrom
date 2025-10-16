@@ -1,7 +1,6 @@
 using Domain.Abstraction;
-using Infrastructure.Messaging.Contracts;
 
-namespace Watcher.Console.App.Events;
+namespace Domain.Events;
 
 public class WatchPathChangedEvent : BaseEvent, IMessage
 {

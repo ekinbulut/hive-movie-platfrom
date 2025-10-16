@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Domain.Events;
 using Infrastructure.Messaging.Constants;
 using Infrastructure.Messaging.Contracts;
 using Rebus.Handlers;
