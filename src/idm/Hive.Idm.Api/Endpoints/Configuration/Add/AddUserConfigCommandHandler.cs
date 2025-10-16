@@ -19,23 +19,25 @@ public class AddUserConfigCommandHandler(IConfigurationRepository configurationR
 
         var config = await configurationRepository.GetConfigurationByUserIdAsync(command.UserId, cancellationToken);
 
+        var response = false;
         if (config == null)
         {
-            return await configurationRepository.AddConfigurationAsync(newConfig, cancellationToken);
+             response = await configurationRepository.AddConfigurationAsync(newConfig, cancellationToken);
+        }
+        else
+        {
+            config.Settings = newConfig.Settings;
+            response =  await configurationRepository.UpdateConfigurationAsync(config, cancellationToken);
         }
 
-        config.Settings = newConfig.Settings;
-        var response =  await configurationRepository.UpdateConfigurationAsync(config, cancellationToken);
-        if (response)
+        if (!response) return response;
+        var @event = new WatchPathChangedEvent()
         {
-            var @event = new WatchPathChangedEvent()
-            {
-                UserId = command.UserId,
-                NewPath = command.Settings.MediaFolder,
-                CausationId = Guid.CreateVersion7().ToString()
-            };
-            await bus.Advanced.Topics.Publish("hive-api.path-changed", @event);
-        }
+            UserId = command.UserId,
+            NewPath = command.Settings.MediaFolder,
+            CausationId = Guid.CreateVersion7().ToString()
+        };
+        await bus.Advanced.Topics.Publish("hive-api.path-changed", @event);
         return response;
     }
 }

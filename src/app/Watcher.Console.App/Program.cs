@@ -132,8 +132,10 @@ logger.LogInformation("");
 var bus = host.Services.GetRequiredService<Rebus.Bus.IBus>();
 await bus.Subscribe<FileFoundEvent>();
 
+await bus.Subscribe<WatchPathChangedEvent>();
+
 // Subscribe to WatchPathChangedEvent from a different queue (e.g., from API)
-await bus.Advanced.Topics.Subscribe("hive-api.path-changed");
+//await bus.Advanced.Topics.Subscribe("hive-api.path-changed");
 
 // --- Define a lightweight publish DTO that implements your abstraction -------
 var defaultCorrelationId = Guid.NewGuid().ToString("N");

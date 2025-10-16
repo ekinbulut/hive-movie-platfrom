@@ -70,13 +70,13 @@ var rabbitConn =
     ?? Environment.GetEnvironmentVariable("RABBITMQ__CONNECTION")
     ?? "amqp://guest:guest@localhost:5672";
 
-var inputQueue = "hive-watcher";
+var inputQueue = "hive-api.path-changed";
 
 // Configure Rebus with routing for multiple queues
 builder.Services.AddMessagingWithRouting(rabbitConn, inputQueue, routing =>
 {
     // Route WatchPathChangedEvent to hive-api queue
-    routing.Map<WatchPathChangedEvent>("path-changed");
+    routing.Map<WatchPathChangedEvent>("hive-api.path-changed");
     // FileFoundEvent uses default queue (hive-watcher)
 }, workers: 0);
 
