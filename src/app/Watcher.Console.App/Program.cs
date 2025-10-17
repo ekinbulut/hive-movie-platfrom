@@ -53,14 +53,6 @@ var builder = Host.CreateDefaultBuilder(args)
             ?? Environment.GetEnvironmentVariable("RABBITMQ__CONNECTION")
             ?? "amqp://guest:guest@localhost:5672";
         
-        var jellyfinUrl = ctx.Configuration["JellyFin:BaseUrl"]
-                          ?? Environment.GetEnvironmentVariable("JELLYFIN_BASE_URL")
-                          ?? throw new ArgumentNullException("JellyFin:BaseUrl not configured");
-        
-        var jellyfinApiKey = ctx.Configuration["JellyFin:ApiKey"]
-                              ?? Environment.GetEnvironmentVariable("JELLYFIN_ACCESS_TOKEN")
-                              ?? throw new ArgumentNullException("JellyFin:ApiKey not configured");
-
         var inputQueue = "hive-watcher";
         services.AutoRegisterHandlersFromAssemblyOf<MessageHandler>();
 
@@ -97,9 +89,6 @@ logger.LogInformation("Press 'q' to quit or Ctrl+C to exit.");
 var bus = host.Services.GetRequiredService<Rebus.Bus.IBus>();
 await bus.Subscribe<FileFoundEvent>();
 await bus.Subscribe<WatchPathChangedEvent>();
-
-// Subscribe to WatchPathChangedEvent from a different queue (e.g., from API)
-//await bus.Advanced.Topics.Subscribe("hive-api.path-changed");
 
 var cancellationTokenSource = new CancellationTokenSource();
 

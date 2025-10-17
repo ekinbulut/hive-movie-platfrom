@@ -70,7 +70,7 @@ var rabbitConn =
     ?? Environment.GetEnvironmentVariable("RABBITMQ__CONNECTION")
     ?? "amqp://guest:guest@localhost:5672";
 
-var inputQueue = "hive-api.path-changed";
+var inputQueue = "hive-watcher";
 
 // Configure Rebus with routing for multiple queues
 builder.Services.AddMessagingWithRouting(rabbitConn, inputQueue, routing =>
