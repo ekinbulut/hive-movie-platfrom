@@ -37,8 +37,26 @@ services:
       - "/home/user/shared:/mnt/host"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - JELLYFIN_BASE_URL=http://192.168.1.112:8096
-      - JELLYFIN_ACCESS_TOKEN=""
+    restart: unless-stopped
+    depends_on:
+      - hive-app
+      - hive-idm
+    networks:
+      - hive-network
+    healthcheck:
+      test: [ "CMD", "test", "-d", "/mnt/host" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+  hive-meta-scraper:
+    build:
+      context: .
+      dockerfile: ./src/app/MetaScraper.App/Dockerfile
+    image: localhost/hive-meta-scraper:latest
+    container_name: hive-meta-scraper
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
     restart: unless-stopped
     depends_on:
       - hive-app

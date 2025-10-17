@@ -1,4 +1,4 @@
-namespace Watcher.Console.App.Models;
+namespace MetaScraper.App.Models;
 
 public class FileContentInfo
 {

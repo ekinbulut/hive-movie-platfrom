@@ -69,6 +69,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bin", "bin", "{C80AD27C-0E0
 		docker-compose-infra.yaml = docker-compose-infra.yaml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaScraper.App", "src\app\MetaScraper.App\MetaScraper.App.csproj", "{BA5E8849-01A9-4C94-8006-1CF24CADF833}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -93,6 +95,7 @@ Global
 		{73772E64-A4D5-4AF1-BE97-43181C842270} = {645EDB6D-68AB-4EE0-A0F6-747EFE5F588F}
 		{CDA09419-D934-481A-8BA2-740614A92E85} = {645EDB6D-68AB-4EE0-A0F6-747EFE5F588F}
 		{D477DAD2-EF2A-4D41-AEBD-7CDB8D53E898} = {645EDB6D-68AB-4EE0-A0F6-747EFE5F588F}
+		{BA5E8849-01A9-4C94-8006-1CF24CADF833} = {4917BA1D-3E0A-4972-B014-EBB93B7D6A6B}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{73772E64-A4D5-4AF1-BE97-43181C842270}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -135,5 +138,9 @@ Global
 		{A69A062A-B418-4878-A74B-32F869B4FFF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A69A062A-B418-4878-A74B-32F869B4FFF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A69A062A-B418-4878-A74B-32F869B4FFF0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA5E8849-01A9-4C94-8006-1CF24CADF833}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA5E8849-01A9-4C94-8006-1CF24CADF833}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA5E8849-01A9-4C94-8006-1CF24CADF833}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA5E8849-01A9-4C94-8006-1CF24CADF833}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

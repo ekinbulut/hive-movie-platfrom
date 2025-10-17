@@ -6,6 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <AssemblyVersion>1.0.0.2</AssemblyVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -22,6 +23,7 @@
       <ProjectReference Include="..\..\common\Common\Common.csproj" />
       <ProjectReference Include="..\..\domain\Domain\Domain.csproj" />
       <ProjectReference Include="..\..\Infrastructure\Infrastructure\Infrastructure.csproj" />
+      <ProjectReference Include="..\MetaScraper.App\MetaScraper.App.csproj" />
     </ItemGroup>
 
     <ItemGroup>

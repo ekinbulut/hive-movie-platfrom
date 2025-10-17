@@ -1,6 +1,5 @@
 using Domain.Events;
 using Infrastructure.Messaging.Constants;
-using Infrastructure.Messaging.Contracts;
 using Rebus.Bus;
 
 namespace Infrastructure.Messaging.Services;

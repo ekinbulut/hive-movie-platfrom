@@ -1,9 +1,9 @@
 using System.Collections.Concurrent;
+using Domain.Events;
+using Domain.Models;
 using Microsoft.Extensions.Logging;
 using Rebus.Bus;
 using Watcher.Console.App.Abstracts;
-using Watcher.Console.App.Events;
-using Watcher.Console.App.Models;
 
 namespace Watcher.Console.App.Services;
 

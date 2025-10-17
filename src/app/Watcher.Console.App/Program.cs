@@ -13,18 +13,21 @@ using Domain.Interfaces;
 using Infrastructure.Database.Extensions;
 using Infrastructure.Integration.Services;
 using Infrastructure.Integration.Services.JellyFin;
-using Infrastructure.Messaging.Extensions;
-using Infrastructure.Messaging.Handlers;
+using Infrastructure.Messaging.Pipeline;
+using MetaScraper.App.Handlers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Rebus.Config;
+using Rebus.Logging;
+using Rebus.Pipeline;
+using Rebus.Pipeline.Send;
+using Rebus.Retry.Simple;
+using Rebus.Routing.TypeBased;
 using Watcher.Console.App.Abstracts;
-using Watcher.Console.App.Events;
 using Watcher.Console.App.Factories;
 using Watcher.Console.App.Handlers;
-using Watcher.Console.App.Models;
 using Watcher.Console.App.Services;
 
 string title = "Hive Folder Watcher";
@@ -54,27 +57,49 @@ var builder = Host.CreateDefaultBuilder(args)
             ?? Environment.GetEnvironmentVariable("RABBITMQ__CONNECTION")
             ?? "amqp://guest:guest@localhost:5672";
         
-        var inputQueue = "hive-watcher";
-        services.AutoRegisterHandlersFromAssemblyOf<MessageHandler>();
+        var inputQueue = "hive-watcher-test";
         services.AutoRegisterHandlersFromAssemblyOf<WatchPathChangedHandler>();
         
 
         // Configure Rebus with routing for multiple queues
         // services.AddMessaging(rabbitConn, inputQueue, workers: 2);
         
-        services.AddMessagingWithRouting(rabbitConn, inputQueue, routing =>
+        services.AddRebus(configure => configure
+            .Logging(l => l.Use(new NullLoggerFactory()))
+            .Transport(t => t.UseRabbitMq(rabbitConn, inputQueue))
+            .Routing(r => r.TypeBased()
+                .Map<WatchPathChangedEvent>(inputQueue))
+            .Options(o =>
             {
-                routing.Map<WatchPathChangedEvent>(inputQueue);
-            }, workers
-        : 1);
+
+                // o.LogPipeline();
+                
+                o.SetNumberOfWorkers(1);
+                o.SetMaxParallelism(2);
+
+                // Simple 2nd level retry then moves to error queue
+                o.RetryStrategy(
+                    errorQueueName: $"{inputQueue}-error",
+                    maxDeliveryAttempts: 5,
+                    secondLevelRetriesEnabled: true);
+                
+                o.Decorate<IPipeline>(c =>
+                {
+                    var pipeline = c.Get<IPipeline>();
+                    return new PipelineStepInjector(pipeline)
+                        .OnSend(new CorrelationOutgoingStep(),
+                            PipelineRelativePosition.After,
+                            typeof(SendOutgoingMessageStep));
+                });
+            })
+        );
+        
+        // services.AddMessaging(rabbitConn, inputQueue);
         
         services.AddDbContext(ctx.Configuration);
 
         services.AddHttpClient();
-        services.AddTransient<ITmdbApiService, TmdbApiService>();
-        services.AddSingleton<IJellyFinServiceConfiguration, JellyFinServiceConfiguration>();
-        services.AddScoped<IJellyFinService, JellyFinService>();
-        // Register watcher services with proper buffer management
+
         services.AddTransient<IFileSystemWatcherFactory, FileSystemWatcherFactory>();
         services.AddTransient<IFileSystemService, FileSystemService>();
         services.AddTransient<IConsoleLogger, ConsoleLogger>();
@@ -86,7 +111,6 @@ using var host = builder.Build();
 
 // Resolve Rebus bus through DI
 var bus = host.Services.GetRequiredService<Rebus.Bus.IBus>();
-await bus.Subscribe<FileFoundEvent>();
 await bus.Subscribe<WatchPathChangedEvent>();
 
 await host.StartAsync();

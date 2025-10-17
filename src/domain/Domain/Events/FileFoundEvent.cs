@@ -1,8 +1,7 @@
 using Domain.Abstraction;
-using Domain.Events;
-using Watcher.Console.App.Models;
+using Domain.Models;
 
-namespace Watcher.Console.App.Events;
+namespace Domain.Events;
 
 public class FileFoundEvent : BaseEvent, IMessage
 {

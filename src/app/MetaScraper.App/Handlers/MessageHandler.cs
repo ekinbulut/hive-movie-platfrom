@@ -1,17 +1,33 @@
 using Common.Crypto;
 using Common.Parser;
 using Domain.Entities;
+using Domain.Events;
 using Domain.Interfaces;
+using Infrastructure.Integration.Services.JellyFin;
 using Infrastructure.Messaging.Handlers;
-using Watcher.Console.App.Events;
 
-namespace Watcher.Console.App.Handlers;
+namespace MetaScraper.App.Handlers;
 
 
-public class MessageHandler(IMovieRepository movieRepository, ITmdbApiService tmdbApiService,  IJellyFinService jellyFinService) : BaseMessageHandler<FileFoundEvent>
+public class MessageHandler(IMovieRepository movieRepository, 
+    ITmdbApiService tmdbApiService,  IJellyFinService jellyFinService,
+    IConfigurationRepository configurationRepository,
+    IJellyFinServiceConfiguration jellyFinServiceConfiguration) : BaseMessageHandler<FileFoundEvent>
 {
-    protected override Task OnHandle(FileFoundEvent message, string? causationId)
+    protected override async Task OnHandle(FileFoundEvent message, string? causationId)
     {
+        //get configuration for user
+        var config = await configurationRepository.GetConfigurationByUserIdAsync(message.UserId);
+        if (config == null)
+        {
+            return;
+        }
+
+        //update jellyfin service configuration
+        jellyFinServiceConfiguration.ApiKey = config.Settings.JellyFinApiKey;
+        jellyFinServiceConfiguration.BaseUrl = config.Settings.JellyFinServer;
+        jellyFinService.SetConfiguration(jellyFinServiceConfiguration);
+        
         var title = TitleParser.ExtractTitle(message.MetaData.Name);
         var hashValue = HashHelper.ComputeSha256Hash(title);
         var exists = movieRepository.GetMovieByHashValue(hashValue);
@@ -21,7 +37,7 @@ public class MessageHandler(IMovieRepository movieRepository, ITmdbApiService tm
             var year = TitleParser.ExtractYear(message.MetaData.Name) ?? 0;
             
             // Get JellyFin movie ID
-            var jellyFinMovieId = jellyFinService.GetMovieIdByNameAsync(title, year > 0 ? year : null).GetAwaiter().GetResult();
+            var jellyFinMovieId = await jellyFinService.GetMovieIdByNameAsync(title, year > 0 ? year : null);
         
             var result = tmdbApiService.SearchMoviesAsync(title, year).GetAwaiter().GetResult();
             var imagePath = result.Results.FirstOrDefault(x => 
@@ -43,8 +59,6 @@ public class MessageHandler(IMovieRepository movieRepository, ITmdbApiService tm
                 UserId = message.UserId
             });
         }
-        
-        return Task.CompletedTask;
     }
     
 }

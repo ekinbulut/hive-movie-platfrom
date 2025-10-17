@@ -51,4 +51,10 @@ public class JellyFinService(IHttpClientFactory httpClientFactory, ILogger<Jelly
             _throttle.Release();
         }
     }
+
+    public void SetConfiguration(IJellyFinServiceConfiguration jellyFinServiceConfiguration)
+    {
+        configuration.ApiKey = jellyFinServiceConfiguration.ApiKey;
+        configuration.BaseUrl = jellyFinServiceConfiguration.BaseUrl;
+    }
 }

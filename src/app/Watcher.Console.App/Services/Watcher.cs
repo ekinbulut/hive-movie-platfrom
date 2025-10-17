@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
+using MetaScraper.App.Models;
 using Microsoft.Extensions.Logging;
 using Watcher.Console.App.Abstracts;
-using Watcher.Console.App.Models;
 
 namespace Watcher.Console.App.Services;
 
