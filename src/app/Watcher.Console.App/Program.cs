@@ -76,12 +76,8 @@ var builder = Host.CreateDefaultBuilder(args)
 
         services.AddHttpClient();
         services.AddTransient<ITmdbApiService, TmdbApiService>();
-        services.AddTransient<IJellyFinService, JellyFinService>(sp =>
-            new JellyFinService(
-                sp.GetRequiredService<IHttpClientFactory>(),
-                sp.GetRequiredService<ILogger<JellyFinService>>(),
-                jellyfinApiKey,
-                jellyfinUrl));
+        services.AddSingleton<IJellyFinServiceConfiguration, JellyFinServiceConfiguration>();
+        services.AddTransient<IJellyFinService, JellyFinService>();
         // Register watcher services with proper buffer management
         services.AddTransient<IFileSystemWatcherFactory, FileSystemWatcherFactory>();
         services.AddTransient<IFileSystemService, FileSystemService>();

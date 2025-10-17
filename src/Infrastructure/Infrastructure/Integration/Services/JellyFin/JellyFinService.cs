@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Integration.Services.JellyFin;
 
-public class JellyFinService(IHttpClientFactory httpClientFactory, ILogger<JellyFinService> logger, string apiKey = "", string baseUrl = "")
+public class JellyFinService(IHttpClientFactory httpClientFactory, ILogger<JellyFinService> logger, IJellyFinServiceConfiguration configuration)
     : IJellyFinService
 {
     private static readonly SemaphoreSlim _throttle = new SemaphoreSlim(2); // Limit to 2 concurrent requests
@@ -19,7 +19,7 @@ public class JellyFinService(IHttpClientFactory httpClientFactory, ILogger<Jelly
             await Task.Delay(_throttleDelay); // Throttle delay
             var httpClient = httpClientFactory.CreateClient();
             var url =
-                $"{baseUrl}/Search/Hints?api_key={apiKey}&SearchTerm={Uri.EscapeDataString(movieName)}&IncludeItemTypes=Movie&Limit=10";
+                $"{configuration.BaseUrl}/Search/Hints?api_key={configuration.ApiKey}&SearchTerm={Uri.EscapeDataString(movieName)}&IncludeItemTypes=Movie&Limit=10";
 
             var response = await httpClient.GetAsync(url);
             response.EnsureSuccessStatusCode();
