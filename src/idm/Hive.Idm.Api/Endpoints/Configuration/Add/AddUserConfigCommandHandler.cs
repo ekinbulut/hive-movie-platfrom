@@ -37,7 +37,7 @@ public class AddUserConfigCommandHandler(IConfigurationRepository configurationR
             NewPath = command.Settings.MediaFolder,
             CausationId = Guid.CreateVersion7().ToString()
         };
-        await bus.Advanced.Topics.Publish("hive-api.path-changed", @event);
+        await bus.Publish(@event);
         return response;
     }
 }

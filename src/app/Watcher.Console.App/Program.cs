@@ -14,6 +14,7 @@ using Infrastructure.Database.Extensions;
 using Infrastructure.Integration.Services;
 using Infrastructure.Integration.Services.JellyFin;
 using Infrastructure.Messaging.Extensions;
+using Infrastructure.Messaging.Handlers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -55,40 +56,45 @@ var builder = Host.CreateDefaultBuilder(args)
         
         var inputQueue = "hive-watcher";
         services.AutoRegisterHandlersFromAssemblyOf<MessageHandler>();
+        services.AutoRegisterHandlersFromAssemblyOf<WatchPathChangedHandler>();
+        
 
         // Configure Rebus with routing for multiple queues
+        // services.AddMessaging(rabbitConn, inputQueue, workers: 2);
+        
         services.AddMessagingWithRouting(rabbitConn, inputQueue, routing =>
-        {
-            // Route WatchPathChangedEvent to hive-api queue
-            routing.Map<WatchPathChangedEvent>("hive-api.path-changed");
-            routing.Map<FileFoundEvent>(inputQueue);
-        }, workers: 1);
+            {
+                routing.Map<WatchPathChangedEvent>(inputQueue);
+            }, workers
+        : 1);
         
         services.AddDbContext(ctx.Configuration);
 
         services.AddHttpClient();
         services.AddTransient<ITmdbApiService, TmdbApiService>();
         services.AddSingleton<IJellyFinServiceConfiguration, JellyFinServiceConfiguration>();
-        services.AddTransient<IJellyFinService, JellyFinService>();
+        services.AddScoped<IJellyFinService, JellyFinService>();
         // Register watcher services with proper buffer management
         services.AddTransient<IFileSystemWatcherFactory, FileSystemWatcherFactory>();
         services.AddTransient<IFileSystemService, FileSystemService>();
         services.AddTransient<IConsoleLogger, ConsoleLogger>();
         services.AddSingleton<IWatcherManager, WatcherManager>();
+
     });
 
 using var host = builder.Build();
+
+// Resolve Rebus bus through DI
+var bus = host.Services.GetRequiredService<Rebus.Bus.IBus>();
+await bus.Subscribe<FileFoundEvent>();
+await bus.Subscribe<WatchPathChangedEvent>();
+
 await host.StartAsync();
 
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
 
 logger.LogInformation($"{title} v{appVersion}");
 logger.LogInformation("Press 'q' to quit or Ctrl+C to exit.");
-
-// Resolve Rebus bus through DI
-var bus = host.Services.GetRequiredService<Rebus.Bus.IBus>();
-await bus.Subscribe<FileFoundEvent>();
-await bus.Subscribe<WatchPathChangedEvent>();
 
 var cancellationTokenSource = new CancellationTokenSource();
 

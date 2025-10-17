@@ -73,12 +73,7 @@ var rabbitConn =
 var inputQueue = "hive-watcher";
 
 // Configure Rebus with routing for multiple queues
-builder.Services.AddMessagingWithRouting(rabbitConn, inputQueue, routing =>
-{
-    // Route WatchPathChangedEvent to hive-api queue
-    routing.Map<WatchPathChangedEvent>("hive-api.path-changed");
-    // FileFoundEvent uses default queue (hive-watcher)
-}, workers: 0);
+builder.Services.AddMessaging(rabbitConn, inputQueue);
 
 
 var app = builder.Build();

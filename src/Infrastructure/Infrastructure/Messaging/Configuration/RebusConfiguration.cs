@@ -62,6 +62,9 @@ public static class RebusConfiguration
             .Routing(r => configureRouting(r.TypeBased()))
             .Options(o =>
             {
+
+                // o.LogPipeline();
+                
                 o.SetNumberOfWorkers(workers);
                 o.SetMaxParallelism(maxParallelism);
 
