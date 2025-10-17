@@ -23,7 +23,6 @@
       <ProjectReference Include="..\..\common\Common\Common.csproj" />
       <ProjectReference Include="..\..\domain\Domain\Domain.csproj" />
       <ProjectReference Include="..\..\Infrastructure\Infrastructure\Infrastructure.csproj" />
-      <ProjectReference Include="..\MetaScraper.App\MetaScraper.App.csproj" />
     </ItemGroup>
 
     <ItemGroup>

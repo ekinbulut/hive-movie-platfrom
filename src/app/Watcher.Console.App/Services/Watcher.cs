@@ -1,5 +1,5 @@
 using System.Collections.Concurrent;
-using MetaScraper.App.Models;
+using Domain.Models;
 using Microsoft.Extensions.Logging;
 using Watcher.Console.App.Abstracts;
 

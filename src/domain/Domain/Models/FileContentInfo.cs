@@ -1,4 +1,4 @@
-namespace MetaScraper.App.Models;
+namespace Domain.Models;
 
 public class FileContentInfo
 {

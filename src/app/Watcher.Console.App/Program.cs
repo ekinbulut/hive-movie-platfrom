@@ -9,12 +9,8 @@
  */
 
 using Domain.Events;
-using Domain.Interfaces;
 using Infrastructure.Database.Extensions;
-using Infrastructure.Integration.Services;
-using Infrastructure.Integration.Services.JellyFin;
 using Infrastructure.Messaging.Pipeline;
-using MetaScraper.App.Handlers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
