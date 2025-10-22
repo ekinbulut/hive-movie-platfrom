@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: ./src/app/Hive.App/Dockerfile
       args:
+        GITHUB_USERNAME: ${GITHUB_USERNAME}
         GITHUB_TOKEN: ${GITHUB_TOKEN}
     image: localhost/hive-app:latest
     container_name: hive-app
@@ -20,6 +21,7 @@ services:
       context: .
       dockerfile: ./src/idm/Hive.Idm.Api/Dockerfile
       args:
+        GITHUB_USERNAME: ${GITHUB_USERNAME}
         GITHUB_TOKEN: ${GITHUB_TOKEN}
     image: localhost/hive-idm:latest
     container_name: hive-idm
@@ -39,6 +41,7 @@ services:
       context: .
       dockerfile: ./src/app/Watcher.Console.App/Dockerfile
       args:
+        GITHUB_USERNAME: ${GITHUB_USERNAME}
         GITHUB_TOKEN: ${GITHUB_TOKEN}
     image: localhost/hive-watcher:latest
     container_name: hive-watcher
@@ -66,6 +69,7 @@ services:
       context: .
       dockerfile: ./src/app/MetaScraper.App/Dockerfile
       args:
+        GITHUB_USERNAME: ${GITHUB_USERNAME}
         GITHUB_TOKEN: ${GITHUB_TOKEN}
     image: localhost/hive-meta-scraper:latest
     container_name: hive-meta-scraper
