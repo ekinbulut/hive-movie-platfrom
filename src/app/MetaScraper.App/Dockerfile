@@ -2,8 +2,7 @@
 USER $APP_UID
 WORKDIR /app
 ENV ASPNETCORE_ENVIRONMENT=Production
-ENV JELLYFIN_ACCESS_TOKEN=""
-ENV JELLYFIN_BASE_URL=http://192.168.1.112:8096
+
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
@@ -13,7 +12,9 @@ COPY src/domain/Domain/Domain.csproj src/domain/Domain/
 COPY src/features/Features/Features.csproj src/features/Features/
 COPY src/Infrastructure/Infrastructure/Infrastructure.csproj src/Infrastructure/Infrastructure/
 COPY src/common/Common/Common.csproj src/common/Common/
+
 RUN dotnet restore "src/app/MetaScraper.App/MetaScraper.App.csproj"
+
 COPY . .
 WORKDIR "/src/src/app/MetaScraper.App"
 RUN dotnet build "./MetaScraper.App.csproj" -c $BUILD_CONFIGURATION -o /app/build
