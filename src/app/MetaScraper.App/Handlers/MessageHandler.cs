@@ -4,7 +4,6 @@ using Domain.Entities;
 using Domain.Events;
 using Domain.Interfaces;
 using Infrastructure.Integration.Services.JellyFin;
-using Infrastructure.Messaging.Handlers;
 
 namespace MetaScraper.App.Handlers;
 
@@ -12,9 +11,9 @@ namespace MetaScraper.App.Handlers;
 public class MessageHandler(IMovieRepository movieRepository, 
     ITmdbApiService tmdbApiService,  IJellyFinService jellyFinService,
     IConfigurationRepository configurationRepository,
-    IJellyFinServiceConfiguration jellyFinServiceConfiguration) : BaseMessageHandler<FileFoundEvent>
+    IJellyFinServiceConfiguration jellyFinServiceConfiguration)
 {
-    protected override async Task OnHandle(FileFoundEvent message, string? causationId)
+    protected async Task OnHandle(FileFoundEvent message, string? causationId)
     {
         //get configuration for user
         var config = await configurationRepository.GetConfigurationByUserIdAsync(message.UserId);

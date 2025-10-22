@@ -1,11 +1,11 @@
+using base_transport;
 using Domain.Abstraction.Mediator;
 using Domain.Events;
 using Domain.Interfaces;
-using Rebus.Bus;
 
 namespace Hive.Idm.Api.Endpoints.Configuration.Add;
 
-public class AddUserConfigCommandHandler(IConfigurationRepository configurationRepository, IBus bus)
+public class AddUserConfigCommandHandler(IConfigurationRepository configurationRepository, IBasicMessagingService basicMessagingService)
     : ICommandHandler<AddUserConfigurationCommand, bool>
 {
     public async Task<bool> HandleAsync(AddUserConfigurationCommand command,
@@ -37,7 +37,10 @@ public class AddUserConfigCommandHandler(IConfigurationRepository configurationR
             NewPath = command.Settings.MediaFolder,
             CausationId = Guid.CreateVersion7().ToString()
         };
-        await bus.Publish(@event);
+        await basicMessagingService.ConnectAsync(cancellationToken);
+        await basicMessagingService.BasicPublishAsync("config.changed",
+            System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(@event), cancellationToken);
+        
         return response;
     }
 }

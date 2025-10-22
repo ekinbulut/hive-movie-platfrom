@@ -1,9 +1,9 @@
 using System.Reflection;
 using System.Text;
+using base_transport;
 using Domain.Extension;
 using FastEndpoints;
 using Hive.Idm.Api.Extensions;
-using Infrastructure.Messaging.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
@@ -62,16 +62,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 builder.Services.AddFastEndpoints();
 
-// Add Rebus
-var rabbitConn =
-    builder.Configuration.GetConnectionString("RabbitMq")
-    ?? Environment.GetEnvironmentVariable("RABBITMQ__CONNECTION")
-    ?? "amqp://guest:guest@localhost:5672";
+builder.Configuration.AddEnvironmentVariables();
 
-var inputQueue = "hive-watcher-test";
-
-// Configure Rebus with routing for multiple queues
-builder.Services.AddMessaging(rabbitConn, inputQueue);
+builder.Services.AddTransportationLayer(builder.Configuration);
 
 
 var app = builder.Build();

@@ -7,7 +7,10 @@
       "launchBrowser": false,
       "applicationUrl": "http://localhost:5188",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "RabbitMQ__HostName": "localhost",
+        "RabbitMQ__UserName": "admin",
+        "RabbitMQ__Password": "admin"
       }
     },
     "https": {

@@ -8,19 +8,12 @@
  * Reviewed by: Ekin BULUT
  */
 
-using Domain.Events;
+using base_transport;
 using Infrastructure.Database.Extensions;
-using Infrastructure.Messaging.Pipeline;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Rebus.Config;
-using Rebus.Logging;
-using Rebus.Pipeline;
-using Rebus.Pipeline.Send;
-using Rebus.Retry.Simple;
-using Rebus.Routing.TypeBased;
 using Watcher.Console.App.Abstracts;
 using Watcher.Console.App.Factories;
 using Watcher.Console.App.Handlers;
@@ -34,6 +27,7 @@ var appVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Ver
 
 // --- Host/DI bootstrap -------------------------------------------------------
 var builder = Host.CreateDefaultBuilder(args)
+    .ConfigureAppConfiguration((hostingContext, config) => { config.AddEnvironmentVariables(); })
     .ConfigureLogging(logging =>
     {
         logging.ClearProviders();
@@ -45,53 +39,8 @@ var builder = Host.CreateDefaultBuilder(args)
     })
     .ConfigureServices((ctx, services) =>
     {
-        // RabbitMQ connection
-        // Prefer appsettings.json: ConnectionStrings:RabbitMq
-        // Fallback to env var RABBITMQ__CONNECTION, then default localhost
-        var rabbitConn =
-            ctx.Configuration.GetConnectionString("RabbitMq")
-            ?? Environment.GetEnvironmentVariable("RABBITMQ__CONNECTION")
-            ?? "amqp://guest:guest@localhost:5672";
-        
-        var inputQueue = "hive-watcher-test";
-        services.AutoRegisterHandlersFromAssemblyOf<WatchPathChangedHandler>();
-        
+        services.AddTransportationLayer(ctx.Configuration);
 
-        // Configure Rebus with routing for multiple queues
-        // services.AddMessaging(rabbitConn, inputQueue, workers: 2);
-        
-        services.AddRebus(configure => configure
-            .Logging(l => l.Use(new NullLoggerFactory()))
-            .Transport(t => t.UseRabbitMq(rabbitConn, inputQueue))
-            .Routing(r => r.TypeBased()
-                .Map<WatchPathChangedEvent>(inputQueue))
-            .Options(o =>
-            {
-
-                // o.LogPipeline();
-                
-                o.SetNumberOfWorkers(1);
-                o.SetMaxParallelism(2);
-
-                // Simple 2nd level retry then moves to error queue
-                o.RetryStrategy(
-                    errorQueueName: $"{inputQueue}-error",
-                    maxDeliveryAttempts: 5,
-                    secondLevelRetriesEnabled: true);
-                
-                o.Decorate<IPipeline>(c =>
-                {
-                    var pipeline = c.Get<IPipeline>();
-                    return new PipelineStepInjector(pipeline)
-                        .OnSend(new CorrelationOutgoingStep(),
-                            PipelineRelativePosition.After,
-                            typeof(SendOutgoingMessageStep));
-                });
-            })
-        );
-        
-        // services.AddMessaging(rabbitConn, inputQueue);
-        
         services.AddDbContext(ctx.Configuration);
 
         services.AddHttpClient();
@@ -101,22 +50,25 @@ var builder = Host.CreateDefaultBuilder(args)
         services.AddTransient<IConsoleLogger, ConsoleLogger>();
         services.AddSingleton<IWatcherManager, WatcherManager>();
 
+        services.AddSingleton<WatchPathChangedHandler>();
     });
 
 using var host = builder.Build();
 
-// Resolve Rebus bus through DI
-var bus = host.Services.GetRequiredService<Rebus.Bus.IBus>();
-await bus.Subscribe<WatchPathChangedEvent>();
-
 await host.StartAsync();
+
+var cancellationTokenSource = new CancellationTokenSource();
+
+
+var handler = host.Services.GetRequiredService<WatchPathChangedHandler>();
+await handler.StartListeningAsync(cancellationTokenSource.Token);
+
 
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
 
 logger.LogInformation($"{title} v{appVersion}");
 logger.LogInformation("Press 'q' to quit or Ctrl+C to exit.");
 
-var cancellationTokenSource = new CancellationTokenSource();
 
 Console.CancelKeyPress += (sender, e) =>
 {
@@ -129,7 +81,7 @@ Console.CancelKeyPress += (sender, e) =>
 if (Environment.UserInteractive && !Console.IsInputRedirected)
 {
     // logger.LogInformation("Press 'q' to quit or Ctrl+C to exit.");
-    
+
     // Run the interactive loop in a background task
     _ = Task.Run(async () =>
     {

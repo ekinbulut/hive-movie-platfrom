@@ -1,47 +1,37 @@
 using System.Collections.Concurrent;
+using base_transport;
 using Domain.Events;
 using Domain.Models;
 using Microsoft.Extensions.Logging;
-using Rebus.Bus;
 using Watcher.Console.App.Abstracts;
 
 namespace Watcher.Console.App.Services;
 
-public class WatcherManager : IWatcherManager, IDisposable
+public class WatcherManager(
+    IFileSystemWatcherFactory watcherFactory,
+    IFileSystemService fileSystemService,
+    ILogger<WatcherManager> logger,
+    IBasicMessagingService basicMessagingService)
+    : IWatcherManager, IDisposable
 {
     private readonly ConcurrentDictionary<string, Watcher> _watchers = new();
-    private readonly IFileSystemWatcherFactory _watcherFactory;
-    private readonly IFileSystemService _fileSystemService;
-    private readonly ILogger<WatcherManager> _logger;
-    private readonly IBus _bus;
-    private readonly string _defaultCorrelationId;
-
-    public WatcherManager(
-        IFileSystemWatcherFactory watcherFactory,
-        IFileSystemService fileSystemService,
-        ILogger<WatcherManager> logger,
-        IBus bus)
-    {
-        _watcherFactory = watcherFactory;
-        _fileSystemService = fileSystemService;
-        _logger = logger;
-        _bus = bus;
-        _defaultCorrelationId = Guid.NewGuid().ToString("N");
-    }
+    private readonly string _defaultCorrelationId = Guid.NewGuid().ToString("N");
+    
+    private const string Queue = "file.found";
 
     public async Task ChangeWatchPathAsync(string newPath, Guid userId)
     {
         var id = userId.ToString();
-        if (!_fileSystemService.DirectoryExists(newPath))
+        if (!fileSystemService.DirectoryExists(newPath))
         {
-            _logger.LogWarning("Path does not exist: {Path} for user {UserId}", newPath, id);
+            logger.LogWarning("Path does not exist: {Path} for user {UserId}", newPath, id);
             throw new DirectoryNotFoundException($"The path '{newPath}' does not exist.");
         }
 
         // Stop existing watcher for this user if exists
         if (_watchers.TryGetValue(id, out var existingWatcher))
         {
-            _logger.LogInformation("Stopping existing watcher for user {UserId}", id);
+            logger.LogInformation("Stopping existing watcher for user {UserId}", id);
             existingWatcher.Stop();
             existingWatcher.Dispose();
             _watchers.TryRemove(id, out _);
@@ -50,7 +40,7 @@ public class WatcherManager : IWatcherManager, IDisposable
         // Start new watcher with the new path
         StartWatcher(newPath, id);
 
-        _logger.LogInformation("Changed watch path to {Path} for user {UserId}", newPath, id);
+        logger.LogInformation("Changed watch path to {Path} for user {UserId}", newPath, id);
         
         await Task.CompletedTask;
     }
@@ -59,15 +49,15 @@ public class WatcherManager : IWatcherManager, IDisposable
     {
         if (_watchers.ContainsKey(userId))
         {
-            _logger.LogWarning("Watcher already exists for user {UserId}", userId);
+            logger.LogWarning("Watcher already exists for user {UserId}", userId);
             return;
         }
 
         var watcher = new Watcher(
             path: path,
-            watcherFactory: _watcherFactory,
-            fileSystemService: _fileSystemService,
-            logger: _logger,
+            watcherFactory: watcherFactory,
+            fileSystemService: fileSystemService,
+            logger: logger,
             filter: "*.*",
             includeSubdirectories: true,
             allowedExtensions: new[] { ".mkv", ".mov", ".mp4" }
@@ -76,7 +66,7 @@ public class WatcherManager : IWatcherManager, IDisposable
         // Subscribe to file discovery events
         watcher.FileContentDiscovered += (sender, eventArgs) =>
         {
-            _logger.LogInformation(
+            logger.LogInformation(
                 "File Discovered for user {UserId}: {Path} (Size: {Size} bytes)",
                 userId,
                 eventArgs.Path,
@@ -89,14 +79,14 @@ public class WatcherManager : IWatcherManager, IDisposable
                 MetaData = new MetaData(eventArgs.Name, eventArgs.Size, eventArgs.Extension),
                 CausationId = _defaultCorrelationId
             };
-
-            _bus.Publish(fileEvent);
+            var @event = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(fileEvent);
+            basicMessagingService.BasicPublishAsync(Queue, @event);
         };
 
         watcher.Start();
         _watchers.TryAdd(userId, watcher);
 
-        _logger.LogInformation("Started watcher for user {UserId} on path {Path}", userId, path);
+        logger.LogInformation("Started watcher for user {UserId} on path {Path}", userId, path);
     }
 
     public void StopWatcher(string userId)
@@ -105,7 +95,7 @@ public class WatcherManager : IWatcherManager, IDisposable
         {
             watcher.Stop();
             watcher.Dispose();
-            _logger.LogInformation("Stopped watcher for user {UserId}", userId);
+            logger.LogInformation("Stopped watcher for user {UserId}", userId);
         }
     }
 
@@ -117,7 +107,7 @@ public class WatcherManager : IWatcherManager, IDisposable
             kvp.Value.Dispose();
         }
         _watchers.Clear();
-        _logger.LogInformation("Stopped all watchers");
+        logger.LogInformation("Stopped all watchers");
     }
 
     public void Dispose()
