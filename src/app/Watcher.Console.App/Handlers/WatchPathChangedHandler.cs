@@ -41,7 +41,7 @@ public class WatchPathChangedHandler(
                 ? message.NewPath
                 : $"/mnt/host/{message.NewPath.TrimStart('/')}";
 
-            await watcherManager.ChangeWatchPathAsync(message.NewPath, message.UserId);
+            await watcherManager.ChangeWatchPathAsync(containerPath, message.UserId);
             
             logger.LogInformation($"Successfully changed watch path to {containerPath} for user {message.UserId}");
         }

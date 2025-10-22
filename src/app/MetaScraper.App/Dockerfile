@@ -2,6 +2,9 @@
 USER $APP_UID
 WORKDIR /app
 ENV ASPNETCORE_ENVIRONMENT=Production
+ENV RabbitMQ__Host=metascraper-rabbitmq
+ENV RabbitMQ__UserName=guest
+ENV RabbitMQ__Password=guest
 
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build

@@ -1,3 +1,4 @@
+using base_transport;
 using Common.Crypto;
 using Common.Parser;
 using Domain.Entities;
@@ -11,9 +12,32 @@ namespace MetaScraper.App.Handlers;
 public class MessageHandler(IMovieRepository movieRepository, 
     ITmdbApiService tmdbApiService,  IJellyFinService jellyFinService,
     IConfigurationRepository configurationRepository,
-    IJellyFinServiceConfiguration jellyFinServiceConfiguration)
+    IJellyFinServiceConfiguration jellyFinServiceConfiguration,
+    IBasicMessagingService messagingService)
 {
-    protected async Task OnHandle(FileFoundEvent message, string? causationId)
+    
+    private const string Queue = "file.found";
+    
+    public async Task StartListeningAsync(CancellationToken ct = default)
+    {
+        await messagingService.ConnectAsync(ct);
+
+        messagingService.ReceivedAsync += async (sender, args) =>
+        {
+            var body = args.Body.ToArray();
+            var messageString = System.Text.Encoding.UTF8.GetString(body);
+            var watchPathChangedEvent = System.Text.Json.JsonSerializer.Deserialize<FileFoundEvent>(messageString);
+            
+            if (watchPathChangedEvent != null)
+            {
+                await HandleAsync(watchPathChangedEvent);
+            }
+        };
+
+        await messagingService.BasicConsumeAsync(Queue, autoAck: true, ct);
+    }
+
+    private async Task HandleAsync(FileFoundEvent message)
     {
         //get configuration for user
         var config = await configurationRepository.GetConfigurationByUserIdAsync(message.UserId);

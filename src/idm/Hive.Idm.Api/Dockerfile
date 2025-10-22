@@ -4,6 +4,9 @@ WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 ENV ASPNETCORE_ENVIRONMENT=Production
+ENV RabbitMQ__HostName=rabbitmq
+ENV RabbitMQ__UserName=guest
+ENV RabbitMQ__Password=guest
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release

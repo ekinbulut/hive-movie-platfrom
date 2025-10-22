@@ -1,7 +1,9 @@
-﻿using Domain.Interfaces;
+﻿using base_transport;
+using Domain.Interfaces;
 using Infrastructure.Database.Extensions;
 using Infrastructure.Integration.Services;
 using Infrastructure.Integration.Services.JellyFin;
+using MetaScraper.App.Handlers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,12 +21,9 @@ class Program
 
         //write the app version and name
         var appVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-        
+
         var builder = Host.CreateDefaultBuilder(args)
-            .ConfigureAppConfiguration((hostingContext, config) =>
-            {
-                config.AddEnvironmentVariables();
-            })
+            .ConfigureAppConfiguration((hostingContext, config) => { config.AddEnvironmentVariables(); })
             .ConfigureLogging(logging =>
             {
                 logging.ClearProviders();
@@ -36,28 +35,30 @@ class Program
             })
             .ConfigureServices((ctx, services) =>
             {
-
-
-                // services.AddMessaging(rabbitConn, inputQueue);
-
+                services.AddTransportationLayer(ctx.Configuration);
                 services.AddDbContext(ctx.Configuration);
 
                 services.AddHttpClient();
                 services.AddTransient<ITmdbApiService, TmdbApiService>();
                 services.AddSingleton<IJellyFinServiceConfiguration, JellyFinServiceConfiguration>();
                 services.AddScoped<IJellyFinService, JellyFinService>();
+
+                services.AddSingleton<MessageHandler>();
             });
 
         using var host = builder.Build();
 
         await host.StartAsync();
+        var cancellationTokenSource = new CancellationTokenSource();
+
+        var handler = host.Services.GetRequiredService<MessageHandler>();
+        await handler.StartListeningAsync(cancellationTokenSource.Token);
 
         var logger = host.Services.GetRequiredService<ILogger<Program>>();
 
         logger.LogInformation($"{title} v{appVersion}");
         logger.LogInformation("Press 'q' to quit or Ctrl+C to exit.");
 
-        var cancellationTokenSource = new CancellationTokenSource();
 
         Console.CancelKeyPress += (sender, e) =>
         {
