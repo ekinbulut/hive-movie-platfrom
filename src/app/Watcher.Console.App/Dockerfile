@@ -8,7 +8,15 @@ ENV RabbitMQ__Password=guest
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
+ARG GITHUB_USERNAME
+ARG GITHUB_TOKEN
 WORKDIR /src
+
+# Add GitHub NuGet source
+RUN dotnet nuget add source --username ${GITHUB_USERNAME} --password ${GITHUB_TOKEN} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${GITHUB_USERNAME}/index.json"
+
+
+
 COPY ["src/app/Watcher.Console.App/Watcher.Console.App.csproj", "src/app/Watcher.Console.App/"]
 COPY src/domain/Domain/Domain.csproj src/domain/Domain/
 COPY src/features/Features/Features.csproj src/features/Features/

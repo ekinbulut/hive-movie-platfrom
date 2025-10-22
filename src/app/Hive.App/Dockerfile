@@ -8,7 +8,13 @@ ENV ASPNETCORE_ENVIRONMENT=Production
 # Use .NET 9.0 SDK for build
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
+ARG GITHUB_USERNAME
+ARG GITHUB_TOKEN
 WORKDIR /src
+
+# Add GitHub NuGet source
+RUN dotnet nuget add source --username ${GITHUB_USERNAME} --password ${GITHUB_TOKEN} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${GITHUB_USERNAME}/index.json"
+
 
 # Copy all project files and dependencies
 COPY src/app/Hive.App/Hive.App.csproj src/app/Hive.App/

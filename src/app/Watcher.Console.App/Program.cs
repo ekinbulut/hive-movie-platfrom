@@ -67,6 +67,24 @@ await handler.StartListeningAsync(cancellationTokenSource.Token);
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
 
 logger.LogInformation($"{title} v{appVersion}");
+
+
+PrintEnvironmentVariables(logger,"RabbitMQ__HostName");
+
+static void PrintEnvironmentVariables(ILogger logger, params string[] variableNames)
+{
+    logger.LogInformation("=== Environment Variables ===");
+    
+    foreach (var name in variableNames)
+    {
+        var value = Environment.GetEnvironmentVariable(name);
+        logger.LogInformation($"{name} = {value ?? "(not set)"}");
+    }
+    
+    logger.LogInformation("============================");
+}
+
+
 logger.LogInformation("Press 'q' to quit or Ctrl+C to exit.");
 
 
