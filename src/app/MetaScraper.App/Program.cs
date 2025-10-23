@@ -1,4 +1,5 @@
 ﻿using base_transport;
+using Domain.Events;
 using Domain.Interfaces;
 using Infrastructure.Database.Extensions;
 using Infrastructure.Integration.Services;
@@ -51,8 +52,12 @@ class Program
         await host.StartAsync();
         var cancellationTokenSource = new CancellationTokenSource();
 
-        var handler = host.Services.GetRequiredService<MessageHandler>();
-        await handler.StartListeningAsync(cancellationTokenSource.Token);
+        // var handler = host.Services.GetRequiredService<MessageHandler>();
+        // await handler.StartListeningAsync(cancellationTokenSource.Token);
+
+        await MessageHandlerExecutor.StartHandlerAsync<FileFoundEvent>(host.Services, "file.found",
+            cancellationTokenSource.Token);
+
 
         var logger = host.Services.GetRequiredService<ILogger<Program>>();
 

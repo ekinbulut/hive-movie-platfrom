@@ -1,3 +1,4 @@
+using base_transport;
 using Domain.Abstraction;
 using Domain.Models;
 
@@ -15,4 +16,5 @@ public class FileFoundEvent : BaseEvent, IMessage
 
     public MetaData MetaData { get; set; }
     public Guid UserId { get; set; }
+    public string CorrelationId { get; set; }
 }

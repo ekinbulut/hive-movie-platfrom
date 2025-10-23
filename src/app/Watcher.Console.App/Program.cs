@@ -9,11 +9,13 @@
  */
 
 using base_transport;
+using Domain.Events;
 using Infrastructure.Database.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Watcher.Console.App;
 using Watcher.Console.App.Abstracts;
 using Watcher.Console.App.Factories;
 using Watcher.Console.App.Handlers;
@@ -58,11 +60,12 @@ using var host = builder.Build();
 await host.StartAsync();
 
 var cancellationTokenSource = new CancellationTokenSource();
+//
+//
+// var handler = host.Services.GetRequiredService<WatchPathChangedHandler>();
+// await handler.StartListeningAsync(cancellationTokenSource.Token);
 
-
-var handler = host.Services.GetRequiredService<WatchPathChangedHandler>();
-await handler.StartListeningAsync(cancellationTokenSource.Token);
-
+await MessageHandlerExecutor.StartHandlerAsync<WatchPathChangedEvent>(host.Services, "config.changed",cancellationTokenSource.Token);
 
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
 

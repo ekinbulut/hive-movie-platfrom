@@ -8,7 +8,7 @@ using Infrastructure.Integration.Services.JellyFin;
 
 namespace MetaScraper.App.Handlers;
 
-
+[Obsolete("Use BaseMessageHandler<T> instead")]
 public class MessageHandler(IMovieRepository movieRepository, 
     ITmdbApiService tmdbApiService,  IJellyFinService jellyFinService,
     IConfigurationRepository configurationRepository,

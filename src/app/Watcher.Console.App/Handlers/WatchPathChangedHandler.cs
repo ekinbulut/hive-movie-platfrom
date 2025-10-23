@@ -5,6 +5,7 @@ using Watcher.Console.App.Abstracts;
 
 namespace Watcher.Console.App.Handlers;
 
+[Obsolete("Use ConfigChangedHandler instead")]
 public class WatchPathChangedHandler(
     IWatcherManager watcherManager,
     ILogger<WatchPathChangedHandler> logger,
