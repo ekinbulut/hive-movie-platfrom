@@ -70,6 +70,10 @@ public class FileFoundHandler(
         }
         catch (Exception e)
         {
+            //Publish message to fallback queue or log error
+            var body = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(message);
+            await messagingService.BasicPublishAsync("file.found.fallback", body, cancellationToken);
+            
             logger.LogError(e.Message);
         }
         finally

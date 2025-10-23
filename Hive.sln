@@ -65,6 +65,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bin", "bin", "{C80AD27C-0E0
 		Makefile = Makefile
 		README.md = README.md
 		docker-compose-infra.yaml = docker-compose-infra.yaml
+		.env_sample = .env_sample
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaScraper.App", "src\app\MetaScraper.App\MetaScraper.App.csproj", "{BA5E8849-01A9-4C94-8006-1CF24CADF833}"
