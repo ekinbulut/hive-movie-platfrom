@@ -8,6 +8,7 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -20,6 +21,8 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
+    - name: Add nuget source
+      run: dotnet nuget add source --username ${{secrets.MY_USERNAME}} --password ${{secrets.MY_PAT}} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{secrets.MY_USERNAME}}/index.json"
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
