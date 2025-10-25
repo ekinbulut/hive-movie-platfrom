@@ -10,7 +10,7 @@
 
 ## 📖 Overview
 
-**Hive** is an open-source, self-hosted movie management platform designed for media enthusiasts. It automatically monitors your movie directories, extracts metadata, and provides a beautiful web interface to browse and manage your collection. Built with modern .NET microservices architecture using event-driven patterns, it's fast, scalable, and easy to deploy.
+**Hive** is an open-source, self-hosted movie management platform designed for media enthusiasts. It automatically monitors your movie directories, extracts metadata, and provides a beautiful web interface to browse and manage your collection.
 
 ### ✨ Key Features
 
@@ -21,102 +21,7 @@
 - 📨 **Event-Driven Architecture** - RabbitMQ-based messaging for scalable microservices
 - 💾 **PostgreSQL Database** - Robust, unified data storage
 - ⚡ **Redis Caching** - High-performance caching layer
-- 🐳 **Docker Ready** - Easy deployment with Docker Compose
-- 🏗️ **Clean Architecture** - Maintainable, testable, and scalable codebase
-
----
-
-## 🏛️ System Architecture
-
-Hive follows an **event-driven microservices architecture** with clean separation of concerns:
-
-```mermaid
-graph TB
-    User[👤 User Browser]
-    
-    User -->|HTTP| Web[🌐 Web Interface<br/>Nginx + HTML/JS<br/>Port: 8000]
-    
-    Web -->|Auth Requests| IDM[🔐 Hive IDM API<br/>Authentication Service<br/>Port: 8082]
-    Web -->|Movie Requests| App[🎬 Hive App API<br/>Movie Service<br/>Port: 8080]
-    Web -->|Media Playback| Jellyfin[📺 Jellyfin<br/>Media Server<br/>Port: 8096]
-    
-    Watcher[👁️ Hive Watcher<br/>File System Monitor<br/>Background Service]
-    Watcher -->|Watch Events| RabbitMQ[🐰 RabbitMQ<br/>Message Broker<br/>Port: 5672, 15672]
-    Watcher -->|Scan Files| Movies[(📁 Movie Files<br/>Directory)]
-    
-    RabbitMQ -->|Path Changed Events| App
-    RabbitMQ -->|File Found Events| Watcher
-    
-    App -->|Read/Write| DB[(💾 PostgreSQL<br/>Unified Database<br/>Port: 5432)]
-    IDM -->|Read/Write| DB
-    Watcher -->|Read/Write| DB
-    
-    App -->|Cache| Redis[⚡ Redis<br/>Cache Layer<br/>Port: 6379]
-    
-    Jellyfin -->|Read Media| Movies
-    Watcher -->|Fetch Metadata| Jellyfin
-    
-    style User fill:#e1f5ff
-    style Web fill:#fff4e6
-    style App fill:#f3e5f5
-    style IDM fill:#e8f5e9
-    style Jellyfin fill:#fce4ec
-    style Watcher fill:#fff3e0
-    style Movies fill:#f1f8e9
-    style DB fill:#e0f2f1
-    style Redis fill:#ffe0b2
-    style RabbitMQ fill:#ffccbc
-```
-
-### 🔄 Data Flow
-
-1. **User** accesses the web interface
-2. **Web UI** authenticates via **Hive IDM API** (gets JWT token)
-3. **Web UI** fetches movie data from **Hive App API** (with JWT)
-4. **Watcher Service** monitors movie directory for file changes
-5. **Watcher Service** publishes events to **RabbitMQ**
-6. **Hive App API** consumes events and processes metadata
-7. **All services** share a unified **PostgreSQL** database
-8. **Redis** caches frequently accessed data for performance
-9. **Jellyfin** integration provides rich media playback experience
-
-### 📊 Component Interaction
-
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant W as Web UI
-    participant I as Hive IDM
-    participant A as Hive App
-    participant MQ as RabbitMQ
-    participant FS as File Watcher
-    participant DB as PostgreSQL
-    participant J as Jellyfin
-    
-    U->>W: Access Dashboard
-    W->>I: POST /v1/api/auth/login
-    I->>DB: Validate Credentials
-    DB-->>I: User Data
-    I-->>W: JWT Token + Refresh Token
-    
-    W->>A: GET /v1/api/movies (+ JWT)
-    A->>DB: Query Movies
-    DB-->>A: Movie List
-    A-->>W: Movie Data
-    W-->>U: Display Movies
-    
-    Note over FS: Monitoring Directory
-    FS->>FS: Detect New File
-    FS->>MQ: Publish WatchPathChangedEvent
-    MQ->>A: Consume Event
-    A->>J: Fetch Metadata
-    J-->>A: Movie Information
-    A->>DB: Store Movie Data
-    
-    U->>W: Play Movie
-    W->>J: Stream Request
-    J-->>U: Media Stream
-```
+- 🐳 **Docker/Podman Ready** - Easy deployment with Docker or Podman Compose
 
 ---
 
@@ -126,58 +31,21 @@ sequenceDiagram
 project-hive/
 ├── src/
 │   ├── app/
-│   │   ├── Hive.App/                 # Movie API (REST endpoints, FastEndpoints)
-│   │   └── Watcher.Console.App/      # File system watcher service
-│   │
+│   │   ├── Hive.App/                    # Movie API
+│   │   ├── Watcher.Console.App/         # File system watcher
+│   │   └── MetaScraper.App/             # Metadata scraper
 │   ├── idm/
-│   │   └── Hive.Idm.Api/             # Authentication API (JWT, User management)
-│   │
-│   ├── web/                          # Frontend (HTML/CSS/JS + Nginx)
-│   │   ├── pages/                    # Web pages
-│   │   ├── assets/                   # Static resources
-│   │   └── Dockerfile                # Web container
-│   │
-│   ├── domain/Domain/                # Business entities & domain logic
-│   │   ├── Entities/                 # Movie, User, Role, etc.
-│   │   ├── Events/                   # Domain events
-│   │   └── Interfaces/               # Repository contracts
-│   │
-│   ├── features/Features/            # Use cases (CQRS handlers)
-│   │   ├── GetAllMovies/
-│   │   ├── GetMoviesByFilter/
-│   │   └── GetFilters/
-│   │
-│   ├── Infrastructure/Infrastructure/ # Data access & integrations
-│   │   ├── Database/                 # EF Core, DbContext, Repositories
-│   │   │   ├── Context/              # HiveDbContext
-│   │   │   ├── Migrations/           # EF Core migrations
-│   │   │   └── Repositories/         # Data access implementations
-│   │   ├── Messaging/                # RabbitMQ (Rebus) configuration
-│   │   ├── Caching/                  # Redis caching
-│   │   └── Integration/              # External APIs (Jellyfin, TMDB)
-│   │
-│   └── common/Common/                # Shared utilities
-│       ├── Parser/                   # Title parsing
-│       └── Crypto/                   # Hashing helpers
-│
-├── tests/                            # Unit & integration tests
-│   ├── Common.Tests/
-│   ├── Console.App.Tests/
-│   └── Infrastructure.Tests/
-│
-├── docker-compose.yaml               # Application services
-├── docker-compose-infra.yaml         # Infrastructure services
-└── Makefile                          # Development commands
+│   │   └── Hive.Idm.Api/                # Authentication API
+│   ├── web/                             # Frontend (HTML/CSS/JS)
+│   ├── domain/Domain/                   # Business entities & domain logic
+│   ├── features/Features/               # CQRS handlers (use cases)
+│   ├── Infrastructure/Infrastructure/   # Data access & integrations
+│   └── common/Common/                   # Shared utilities
+├── tests/                               # Unit & integration tests
+├── docker-compose.yaml                  # Application services
+├── docker-compose-infra.yaml            # Infrastructure services
+└── Makefile                             # Development commands
 ```
-
-### 📦 Architecture Layers
-
-| Layer | Responsibility | Examples |
-|-------|---------------|----------|
-| **Presentation** | User interfaces & APIs | Web UI, REST endpoints (FastEndpoints) |
-| **Application** | Use cases & orchestration | CQRS handlers, commands/queries (MediatR) |
-| **Domain** | Business logic & rules | Movie entities, domain events, validation |
-| **Infrastructure** | External concerns | Database (EF Core), messaging (Rebus), cache (Redis) |
 
 ---
 
@@ -185,11 +53,28 @@ project-hive/
 
 ### Prerequisites
 
-- **Docker** or **Podman** (recommended)
+- **Docker** or **Podman**
 - **Docker Compose** or **Podman Compose**
 - **.NET 9.0 SDK** (only for local development)
 
-### Option 1: Docker Compose (Recommended)
+### Environment Setup
+
+Create a `.env` file in the project root for GitHub package authentication:
+
+```bash
+# Copy the sample environment file
+cp .env_sample .env
+
+# Edit .env and add your GitHub credentials
+GITHUB_USERNAME=your-github-username
+GITHUB_TOKEN=your-github-personal-access-token
+```
+
+> **Note:** GitHub credentials are required for building Docker images if your project uses private NuGet packages from GitHub Package Registry. If you don't use private packages, you can leave these empty.
+
+### Using Docker/Podman Compose
+
+> **Note:** Replace `docker-compose` with `podman-compose` if you're using Podman.
 
 ```bash
 # 1. Clone the repository
@@ -202,203 +87,105 @@ export GID=$(id -g)
 
 # 3. Start infrastructure services (PostgreSQL, Redis, RabbitMQ, Jellyfin)
 docker-compose -f docker-compose-infra.yaml up -d
+# Or with Podman:
+# podman-compose -f docker-compose-infra.yaml up -d
 
-# 4. Wait for PostgreSQL to be ready (check with docker-compose ps)
-docker-compose -f docker-compose-infra.yaml ps
+# 4. Run database migrations (first time setup)
+docker-compose run --rm hive-app dotnet ef database update \
+  --project /app/src/Infrastructure/Infrastructure/Infrastructure.csproj \
+  --startup-project /app/src/app/Hive.App/Hive.App.csproj
 
-# 5. Run database migrations (IMPORTANT - First time setup)
-# See "Database Migrations" section below
-
-# 6. Start application services
+# 5. Start application services
 docker-compose up -d
+# Or with Podman:
+# podman-compose up -d
 
-# 7. Access the application
+# 6. Access the application
 # Web UI:       http://localhost:8000
 # Movie API:    http://localhost:8080
 # Auth API:     http://localhost:8082
 # Jellyfin:     http://localhost:8096
-# RabbitMQ UI:  http://localhost:15672 (user: admin, pass: admin)
+# RabbitMQ UI:  http://localhost:15672 (admin/admin)
 ```
 
-### Option 2: Local Development
+### Local Development (Without Containers)
 
 ```bash
 # 1. Restore dependencies
 dotnet restore
 
-# 2. Build the solution
-dotnet build
-
-# 3. Start infrastructure services
+# 2. Start infrastructure services
 docker-compose -f docker-compose-infra.yaml up -d
 
-# 4. Run database migrations
-dotnet ef database update --project src/Infrastructure/Infrastructure --startup-project src/app/Hive.App
+# 3. Run database migrations
+dotnet ef database update \
+  --project src/Infrastructure/Infrastructure \
+  --startup-project src/app/Hive.App
 
-# 5. Run tests
-dotnet test
-
-# 6. Start services individually
+# 4. Start services individually
 # Terminal 1 - Movie API
-cd src/app/Hive.App
-dotnet run
+cd src/app/Hive.App && dotnet run
 
 # Terminal 2 - Auth API
-cd src/idm/Hive.Idm.Api
-dotnet run
+cd src/idm/Hive.Idm.Api && dotnet run
 
 # Terminal 3 - File Watcher
-cd src/app/Watcher.Console.App
-dotnet run
+cd src/app/Watcher.Console.App && dotnet run
 ```
 
 ---
 
-## 💾 Database Migrations
+## 💾 Database Setup
 
-### Initial Setup (First Time Users)
-
-Hive uses **Entity Framework Core** for database management. You must run migrations before using the application for the first time.
-
-#### Method 1: Using Docker (Easiest)
+### First Time Setup
 
 ```bash
-# 1. Start PostgreSQL
-docker-compose -f docker-compose-infra.yaml up -d postgres
-
-# 2. Wait for PostgreSQL to be ready (15-30 seconds)
-docker-compose -f docker-compose-infra.yaml logs -f postgres
-# Look for: "database system is ready to accept connections"
-
-# 3. Run migrations from the Hive.App container
-docker-compose run --rm hive-app dotnet ef database update \
-  --project /app/src/Infrastructure/Infrastructure/Infrastructure.csproj \
-  --startup-project /app/src/app/Hive.App/Hive.App.csproj
-
-# Alternative: Execute from your local machine (if .NET SDK installed)
-dotnet ef database update \
-  --project src/Infrastructure/Infrastructure/Infrastructure.csproj \
-  --startup-project src/app/Hive.App/Hive.App.csproj
-```
-
-#### Method 2: Using .NET CLI (Local Development)
-
-```bash
-# 1. Install EF Core tools (if not already installed)
+# Install EF Core tools (if not already installed)
 dotnet tool install --global dotnet-ef
 
-# 2. Update to the latest version
-dotnet tool update --global dotnet-ef
-
-# 3. Ensure PostgreSQL is running
+# Start PostgreSQL
 docker-compose -f docker-compose-infra.yaml up -d postgres
 
-# 4. Run migrations
-cd /path/to/project-hive
+# Run migrations
 dotnet ef database update \
   --project src/Infrastructure/Infrastructure \
   --startup-project src/app/Hive.App
-
-# Expected output:
-# Build started...
-# Build succeeded.
-# Applying migration '20251016091011_InitialCreate'.
-# Done.
 ```
 
-### Verify Database Setup
+### Verify Database
 
 ```bash
-# Connect to PostgreSQL and check tables
+# Connect to PostgreSQL
 docker exec -it postgres_db psql -U postgres -d hive_development
 
-# Inside psql:
-\dt              # List all tables
-\d movies        # Describe movies table
-\d users         # Describe users table
-\q               # Quit
+# List tables
+\dt
+
+# Expected tables: movies, users, roles, user_roles, refresh_tokens, audit_logs
 ```
 
-You should see these tables:
-- `movies` - Movie metadata
-- `users` - User accounts
-- `roles` - User roles
-- `user_roles` - User-role mappings
-- `refresh_tokens` - JWT refresh tokens
-- `audit_logs` - Audit trail
-- `configurations` - Application settings
-- `__EFMigrationsHistory` - EF Core migration tracking
-
-### Creating New Migrations
-
-When you modify entities in the `Domain` layer:
+### Create New Migration
 
 ```bash
-# 1. Create a new migration
 dotnet ef migrations add YourMigrationName \
   --project src/Infrastructure/Infrastructure \
   --startup-project src/app/Hive.App \
   --output-dir Migrations
-
-# 2. Review the generated migration files in:
-# src/Infrastructure/Infrastructure/Migrations/
-
-# 3. Apply the migration
-dotnet ef database update \
-  --project src/Infrastructure/Infrastructure \
-  --startup-project src/app/Hive.App
-```
-
-### Troubleshooting Migrations
-
-```bash
-# Check current migration status
-dotnet ef migrations list \
-  --project src/Infrastructure/Infrastructure \
-  --startup-project src/app/Hive.App
-
-# Rollback to a specific migration
-dotnet ef database update PreviousMigrationName \
-  --project src/Infrastructure/Infrastructure \
-  --startup-project src/app/Hive.App
-
-# Remove the last migration (if not applied)
-dotnet ef migrations remove \
-  --project src/Infrastructure/Infrastructure \
-  --startup-project src/app/Hive.App
-
-# Generate SQL script without applying
-dotnet ef migrations script \
-  --project src/Infrastructure/Infrastructure \
-  --startup-project src/app/Hive.App \
-  --output migration.sql
 ```
 
 ---
 
 ## ⚙️ Configuration
 
-### Environment Variables
+### Key Configuration Files
 
-Update your `appsettings.json` or set environment variables:
+| File | Purpose |
+|------|---------|
+| `src/app/Hive.App/appsettings.json` | Movie API settings |
+| `src/idm/Hive.Idm.Api/appsettings.json` | Auth API settings |
+| `src/app/Watcher.Console.App/appsettings.json` | File watcher settings |
 
-#### Hive.App (Movie API) - `src/app/Hive.App/appsettings.json`
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5432;Database=hive_development;Username=postgres;Password=postgres",
-    "RabbitMq": "amqp://admin:admin@localhost:5672"
-  },
-  "JwtSettings": {
-    "SecretKey": "YourSuperSecretKeyThatIsAtLeast32CharactersLong!",
-    "Issuer": "HiveIdm",
-    "Audience": "HiveApi"
-  }
-}
-```
-
-#### Hive.Idm.Api (Auth API) - `src/idm/Hive.Idm.Api/appsettings.json`
+### Example Configuration
 
 ```json
 {
@@ -410,17 +197,6 @@ Update your `appsettings.json` or set environment variables:
     "SecretKey": "YourSuperSecretKeyThatIsAtLeast32CharactersLong!",
     "Issuer": "HiveIdm",
     "Audience": "HiveApi"
-  }
-}
-```
-
-#### Watcher.Console.App - `src/app/Watcher.Console.App/appsettings.json`
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5432;Database=hive_development;Username=postgres;Password=postgres",
-    "RabbitMq": "amqp://admin:admin@localhost:5672"
   },
   "JellyFin": {
     "BaseUrl": "http://localhost:8096",
@@ -429,41 +205,17 @@ Update your `appsettings.json` or set environment variables:
 }
 ```
 
-### Docker Compose Services
-
-#### Application Services (`docker-compose.yaml`)
+### Services & Ports
 
 | Service | Port | Description |
 |---------|------|-------------|
-| `hive-app` | 8080 | Movie API (FastEndpoints) |
-| `hive-idm` | 8082 | Authentication API |
-| `hive-watcher` | - | File monitor (background service) |
-| `project-hive-web` | 8000 | Web interface (Nginx) |
-
-#### Infrastructure Services (`docker-compose-infra.yaml`)
-
-| Service | Port | Description |
-|---------|------|-------------|
-| `postgres` | 5432 | PostgreSQL 15 database |
-| `redis` | 6379 | Redis cache |
-| `rabbitmq` | 5672, 15672 | RabbitMQ broker + Management UI |
-| `jellyfin` | 8096 | Jellyfin media server |
-
-### Volume Mappings
-
-```yaml
-# Infrastructure volumes
-volumes:
-  postgres_data:       # Database persistence
-  redis_data:          # Cache persistence  
-  rabbitmq_data:       # Message queue persistence
-  jellyfin-config:     # Jellyfin configuration
-  jellyfin-cache:      # Jellyfin cache
-
-# Movie directory (update path in docker-compose-infra.yaml)
-- "/home/user/shared/Plex/Shared Movies:/media:ro"  # Jellyfin mount
-- "/home/user/shared:/mnt/host"                      # Watcher mount
-```
+| Web UI | 8000 | Frontend interface |
+| Hive App | 8080 | Movie API |
+| Hive IDM | 8082 | Authentication API |
+| Jellyfin | 8096 | Media server |
+| RabbitMQ | 5672, 15672 | Message broker + UI |
+| PostgreSQL | 5432 | Database |
+| Redis | 6379 | Cache |
 
 ---
 
@@ -475,16 +227,9 @@ volumes:
 make help          # Show all available commands
 make up            # Start all services
 make down          # Stop all services
-make restart       # Restart services
-make logs          # View logs (all services)
-make logs-app      # View Movie API logs
-make logs-idm      # View Auth API logs
-make logs-watcher  # View Watcher logs
+make logs          # View logs
 make build         # Rebuild containers
-make clean         # Remove containers
 make status        # Show service status
-make shell-app     # Enter Hive App container
-make shell-idm     # Enter Hive IDM container
 ```
 
 ### Running Tests
@@ -495,163 +240,91 @@ dotnet test
 
 # Run specific test project
 dotnet test tests/Common.Tests/
-dotnet test tests/Infrastructure.Tests/
 
-# Run with coverage
-dotnet test --collect:"XPlat Code Coverage"
-
-# Watch mode (TDD)
+# Watch mode
 dotnet watch test --project tests/Common.Tests/
 ```
 
-### Adding New Features
+---
 
-1. **Domain Layer** - Add entities in `src/domain/Domain/Entities/`
-2. **Infrastructure Layer** - Create repositories in `src/Infrastructure/Infrastructure/Database/Repositories/`
-3. **Features Layer** - Create CQRS handlers in `src/features/Features/`
-4. **API Layer** - Add FastEndpoints in `src/app/Hive.App/`
-5. **Database** - Create and apply EF Core migrations
-6. **Tests** - Write tests in corresponding `tests/` directory
+## 🐳 Docker & Podman Commands
 
-### Debugging
+### Build Images
 
 ```bash
-# View RabbitMQ queues and messages
-# Open: http://localhost:15672 (admin/admin)
+# Docker
+docker-compose build
 
-# View PostgreSQL data
-docker exec -it postgres_db psql -U postgres -d hive_development
+# Podman
+podman-compose build
+```
 
-# View Redis cache
-docker exec -it redis_cache redis-cli -a 181985
-> KEYS *
-> GET key_name
+### View Logs
 
-# Follow application logs
-docker-compose logs -f hive-app hive-idm hive-watcher
+```bash
+# Docker
+docker-compose logs -f hive-app
+
+# Podman
+podman-compose logs -f hive-app
+```
+
+### Container Management
+
+```bash
+# Docker
+docker-compose ps
+docker-compose stop
+docker-compose restart
+
+# Podman
+podman-compose ps
+podman-compose stop
+podman-compose restart
 ```
 
 ---
 
 ## 🧪 Testing
 
-The project includes comprehensive test coverage:
+Test coverage includes:
 
-| Test Project | Coverage |
-|--------------|----------|
-| **Common.Tests** | Utilities, title parsing, crypto/hashing |
-| **Console.App.Tests** | File watcher logic, event handling |
-| **Infrastructure.Tests** | Database repositories, EF Core queries |
+- **Common.Tests** - Utilities, title parsing, crypto
+- **Console.App.Tests** - File watcher logic
+- **Infrastructure.Tests** - Database repositories
 
-**Testing Stack:**
-- **xUnit** - Test framework
-- **Moq** - Mocking framework
-- **FluentAssertions** - Readable assertions
-
----
-
-## 🐳 Docker Deployment
-
-### Building Images
-
-```bash
-# Build all application images
-docker-compose build
-
-# Build specific service
-docker-compose build hive-app
-docker-compose build hive-idm
-docker-compose build hive-watcher
-docker-compose build project-hive-web
-```
-
-### Production Deployment
-
-```bash
-# 1. Start infrastructure
-docker-compose -f docker-compose-infra.yaml up -d
-
-# 2. Run migrations
-docker-compose run --rm hive-app dotnet ef database update \
-  --project /app/src/Infrastructure/Infrastructure/Infrastructure.csproj \
-  --startup-project /app/src/app/Hive.App/Hive.App.csproj
-
-# 3. Start application in production mode
-ASPNETCORE_ENVIRONMENT=Production docker-compose up -d
-
-# 4. View logs
-docker-compose logs -f
-
-# 5. Check service health
-docker-compose ps
-```
-
-### Health Checks
-
-All services include health checks:
-
-```bash
-# Check container health status
-docker-compose ps
-docker-compose -f docker-compose-infra.yaml ps
-
-# Manual health checks
-curl http://localhost:8080/health     # Hive App (if configured)
-curl http://localhost:8082/health     # Hive IDM (if configured)
-
-# Database health
-docker exec postgres_db pg_isready -U postgres
-
-# RabbitMQ health
-docker exec rabbitmq_broker rabbitmq-diagnostics ping
-
-# Redis health
-docker exec redis_cache redis-cli -a 181985 ping
-```
+**Stack:** xUnit, Moq, FluentAssertions
 
 ---
 
 ## 🔧 Technology Stack
 
 ### Backend
-- **.NET 9.0** - Runtime and framework
-- **FastEndpoints** - High-performance REST APIs
-- **MediatR** - CQRS pattern implementation
-- **Entity Framework Core 9** - ORM and database migrations
-- **Rebus** - Message bus abstraction
+- .NET 9.0
+- FastEndpoints (REST APIs)
+- base-mediatr (CQRS)
+- Entity Framework Core 9
+- base-transport (Messaging)
 
 ### Infrastructure
-- **PostgreSQL 15** - Primary database
-- **Redis 7** - Caching layer
-- **RabbitMQ 4.1** - Message broker
-- **Jellyfin** - Media server
+- PostgreSQL 15
+- Redis 7
+- RabbitMQ 4.1
+- Jellyfin
 
 ### Frontend
-- **Nginx** - Web server
-- **Vanilla JavaScript** - Client-side logic
-- **HTML5/CSS3** - User interface
+- Nginx
+- HTML5/CSS3/JavaScript
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! Here's how to get started:
-
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
-4. **Push** to the branch (`git push origin feature/amazing-feature`)
-5. **Open** a Pull Request
-
-### Development Guidelines
-
-- Follow Clean Architecture principles
-- Write tests for new features
-- Update documentation
-- Follow C# coding conventions
-- Create EF Core migrations for database changes
-- Ensure Docker builds succeed
-- Test with both Docker and local development setups
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ---
 
@@ -661,23 +334,10 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-## 🙏 Acknowledgments
-
-- Built with [.NET 9.0](https://dotnet.microsoft.com/)
-- [Jellyfin](https://jellyfin.org/) for media server integration
-- [FastEndpoints](https://fast-endpoints.com/) for high-performance APIs
-- [Rebus](https://github.com/rebus-org/Rebus) for messaging
-- [Entity Framework Core](https://docs.microsoft.com/en-us/ef/core/) for data access
-- [RabbitMQ](https://www.rabbitmq.com/) for reliable messaging
-- [PostgreSQL](https://www.postgresql.org/) for robust data storage
-
----
-
 ## 📞 Support
 
 - 🐛 **Issues**: [GitHub Issues](https://github.com/yourusername/project-hive/issues)
 - 💬 **Discussions**: [GitHub Discussions](https://github.com/yourusername/project-hive/discussions)
-- 📖 **Documentation**: Check individual project README files
 
 ---
 
