@@ -25,6 +25,12 @@
 
 ---
 
+## 📸 Screenshots
+
+![Hive Movie Platform](sample.png)
+
+---
+
 ## 🏗️ Project Structure
 
 ```
