@@ -29,7 +29,7 @@ var appVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Ver
 
 // --- Host/DI bootstrap -------------------------------------------------------
 var builder = Host.CreateDefaultBuilder(args)
-    .ConfigureAppConfiguration((hostingContext, config) => { config.AddEnvironmentVariables(); })
+    .ConfigureAppConfiguration((hostingContext, config) => { config.AddEnvironmentVariables(); }) // Add environment variables
     .ConfigureLogging(logging =>
     {
         logging.ClearProviders();
@@ -51,8 +51,8 @@ var builder = Host.CreateDefaultBuilder(args)
         services.AddTransient<IFileSystemService, FileSystemService>();
         services.AddTransient<IConsoleLogger, ConsoleLogger>();
         services.AddSingleton<IWatcherManager, WatcherManager>();
+        services.AddSingleton<IStartupService, StartupService>();
 
-        services.AddSingleton<WatchPathChangedHandler>();
     });
 
 using var host = builder.Build();
@@ -60,23 +60,22 @@ using var host = builder.Build();
 await host.StartAsync();
 
 var cancellationTokenSource = new CancellationTokenSource();
-//
-//
-// var handler = host.Services.GetRequiredService<WatchPathChangedHandler>();
-// await handler.StartListeningAsync(cancellationTokenSource.Token);
 
 await MessageHandlerExecutor.StartHandlerAsync<WatchPathChangedEvent>(host.Services, "config.changed",cancellationTokenSource.Token);
 
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
-
 logger.LogInformation($"{title} v{appVersion}");
 
+// Initialize watchers for existing users
+var startupService = host.Services.GetRequiredService<IStartupService>();
+
+logger.LogInformation("=== Environment Variables ===");
 
 PrintEnvironmentVariables(logger,"RabbitMQ__HostName");
+PrintEnvironmentVariables(logger,"JELLYFIN_BASE_URL");
 
 static void PrintEnvironmentVariables(ILogger logger, params string[] variableNames)
 {
-    logger.LogInformation("=== Environment Variables ===");
     
     foreach (var name in variableNames)
     {
@@ -84,12 +83,13 @@ static void PrintEnvironmentVariables(ILogger logger, params string[] variableNa
         logger.LogInformation($"{name} = {value ?? "(not set)"}");
     }
     
-    logger.LogInformation("============================");
 }
+    logger.LogInformation("============================");
 
 
 logger.LogInformation("Press 'q' to quit or Ctrl+C to exit.");
 
+await startupService.InitializeWatchersAsync(cancellationTokenSource.Token);
 
 Console.CancelKeyPress += (sender, e) =>
 {
@@ -142,6 +142,6 @@ catch (TaskCanceledException)
 
 logger.LogWarning("Stopping watcher...");
 
-// Stop Rebus/Host
+await startupService.StopAllWatchersAsync();
 
 await host.StopAsync();

@@ -8,4 +8,5 @@ public interface IFileSystemService
     FileInfo GetFileInfo(string path);
     FileInfo[] GetFiles(string path, string searchPattern, SearchOption searchOption);
     DirectoryInfo[] GetDirectories(string path, string searchPattern, SearchOption searchOption);
+    bool IsFileLocked(string eventArgsPath);
 }

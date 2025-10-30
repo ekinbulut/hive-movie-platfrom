@@ -6,5 +6,6 @@ public interface IWatcherManager
     void StartWatcher(string path, string userId);
     void StopWatcher(string userId);
     void StopAllWatchers();
+    Task StopAllWatchersAsync();
 }
 

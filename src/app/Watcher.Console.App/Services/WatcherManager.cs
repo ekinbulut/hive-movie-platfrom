@@ -72,11 +72,20 @@ public class WatcherManager(
                 eventArgs.Path,
                 eventArgs.Size);
 
+            // check if file is still being written to
+            while (fileSystemService.IsFileLocked(eventArgs.Path))
+            {
+                logger.LogInformation("Waiting for file to be copied: {Path}", eventArgs.Path);
+                Thread.Sleep(500);
+            }
+            
+            var size= fileSystemService.GetFileInfo(eventArgs.Path).Length;
+
             var fileEvent = new FileFoundEvent
             {
                 UserId = Guid.Parse(userId),
                 FilePaths = new List<string> { eventArgs.Path },
-                MetaData = new MetaData(eventArgs.Name, eventArgs.Size, eventArgs.Extension),
+                MetaData = new MetaData(eventArgs.Name, size, eventArgs.Extension),
                 CausationId = _defaultCorrelationId
             };
             var @event = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(fileEvent);
@@ -108,6 +117,12 @@ public class WatcherManager(
         }
         _watchers.Clear();
         logger.LogInformation("Stopped all watchers");
+    }
+
+    public Task StopAllWatchersAsync()
+    {
+        StopAllWatchers();
+        return Task.CompletedTask;
     }
 
     public void Dispose()

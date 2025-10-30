@@ -23,4 +23,24 @@ public class FileSystemService : IFileSystemService
         var directory = new DirectoryInfo(path);
         return directory.GetDirectories(searchPattern, searchOption);
     }
+
+    public bool IsFileLocked(string eventArgsPath)
+    {
+        FileStream? stream = null;
+        try
+        {
+            var file = new FileInfo(eventArgsPath);
+            stream = file.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        }
+        catch (IOException)
+        {
+            return true;
+        }
+        finally
+        {
+            stream?.Close();
+        }
+
+        return false;
+    }
 }
