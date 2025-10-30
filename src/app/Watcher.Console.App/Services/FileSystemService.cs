@@ -26,21 +26,49 @@ public class FileSystemService : IFileSystemService
 
     public bool IsFileLocked(string eventArgsPath)
     {
-        FileStream? stream = null;
+        if (!File.Exists(eventArgsPath))
+            return false;
+
         try
         {
-            var file = new FileInfo(eventArgsPath);
-            stream = file.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+            // First, check if file size is stable over multiple checks
+            // This is more reliable for detecting ongoing copy operations
+            var fileInfo = new FileInfo(eventArgsPath);
+            var initialSize = fileInfo.Length;
+            var lastModified = fileInfo.LastWriteTimeUtc;
+            
+            // Wait a bit
+            Thread.Sleep(200);
+            
+            fileInfo.Refresh();
+            var currentSize = fileInfo.Length;
+            var currentModified = fileInfo.LastWriteTimeUtc;
+            
+            // If size or last modified changed, file is still being written to
+            if (initialSize != currentSize || lastModified != currentModified)
+            {
+                return true;
+            }
+            
+            // Try to open the file exclusively to check if it's locked
+            using var stream = new FileStream(
+                eventArgsPath, 
+                FileMode.Open, 
+                FileAccess.Read,
+                FileShare.ReadWrite); // Allow other readers/writers to detect active locks
+            
+            // File opened successfully and size is stable
+            return false;
         }
         catch (IOException)
         {
+            // File is locked by another process (still being copied)
             return true;
         }
-        finally
+        catch (UnauthorizedAccessException)
         {
-            stream?.Close();
+            // File exists but we don't have permission, treat as locked
+            return true;
         }
-
-        return false;
     }
 }

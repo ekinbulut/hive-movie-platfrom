@@ -90,6 +90,8 @@ public class WatcherManager(
             };
             var @event = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(fileEvent);
             basicMessagingService.BasicPublishAsync(Queue, @event);
+            
+            logger.LogInformation("Published FileFoundEvent for user {UserId}: {Path}", userId, eventArgs.Name);
         };
 
         watcher.Start();
