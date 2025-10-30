@@ -46,7 +46,7 @@ services:
     image: localhost/hive-watcher:latest
     container_name: hive-watcher
     volumes:
-      - "/home/user/shared:/mnt/host"
+      - "/home/user/shared:/mnt/host" # Bind host directory to container. The host directory should mount your media files.
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - RabbitMQ__HostName=rabbitmq_broker
