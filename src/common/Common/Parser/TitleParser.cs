@@ -12,7 +12,9 @@ public static class TitleParser
             "x265", "x264", "HEVC", "10bit", "8bit", "AAC5", "AAC", "DTS", "AC3", "YTS", "MX", "RARBG"
         };
 
-        var parts = input.Split('.');
+        // Normalize spaces to dots to handle both dot-separated and space-separated filenames
+        var normalizedInput = input.Replace(" ", ".");
+        var parts = normalizedInput.Split('.');
 
         // Remove file extension
         if (parts.Length > 0 && Regex.IsMatch(parts[^1], @"^[a-zA-Z0-9]+$"))

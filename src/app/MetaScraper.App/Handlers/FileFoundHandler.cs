@@ -12,7 +12,7 @@ namespace MetaScraper.App.Handlers;
 public class FileFoundHandler(
     ILogger<FileFoundHandler> logger,
     IBasicMessagingService service,
-    IMovieRepository movieRepositor,
+    IMovieRepository movieRepository,
     IJellyFinService jellyFinService,
     IJellyFinServiceConfiguration jellyFinServiceConfiguration,
     ITmdbApiService tmdbApiService,
@@ -25,7 +25,7 @@ public class FileFoundHandler(
     {
         try
         {
-            var config = await configurationRepository.GetConfigurationByUserIdAsync(message.UserId);
+            var config = await configurationRepository.GetConfigurationByUserIdAsync(message.UserId, cancellationToken);
             if (config == null)
             {
                 return;
@@ -38,7 +38,7 @@ public class FileFoundHandler(
 
             var title = TitleParser.ExtractTitle(message.MetaData.Name);
             var hashValue = HashHelper.ComputeSha256Hash(title);
-            var exists = movieRepositor.GetMovieByHashValue(hashValue);
+            var exists = movieRepository.GetMovieByHashValue(hashValue);
 
             if (!exists)
             {
@@ -52,7 +52,7 @@ public class FileFoundHandler(
                     DateTime.TryParse(x.ReleaseDate, out var releaseDate) &&
                     releaseDate.Year == year)?.PosterPath;
 
-                movieRepositor.AddMovie(new Movie()
+                movieRepository.AddMovie(new Movie()
                 {
                     FilePath = message.FilePaths.FirstOrDefault(),
                     CreatedTime = DateTime.UtcNow,

@@ -44,7 +44,6 @@ class Program
                 services.AddSingleton<IJellyFinServiceConfiguration, JellyFinServiceConfiguration>();
                 services.AddScoped<IJellyFinService, JellyFinService>();
 
-                services.AddSingleton<MessageHandler>();
             });
 
         using var host = builder.Build();
@@ -52,13 +51,9 @@ class Program
         await host.StartAsync();
         var cancellationTokenSource = new CancellationTokenSource();
 
-        // var handler = host.Services.GetRequiredService<MessageHandler>();
-        // await handler.StartListeningAsync(cancellationTokenSource.Token);
-
         await MessageHandlerExecutor.StartHandlerAsync<FileFoundEvent>(host.Services, "file.found",
             cancellationTokenSource.Token);
-
-
+        
         var logger = host.Services.GetRequiredService<ILogger<Program>>();
 
         logger.LogInformation($"{title} v{appVersion}");

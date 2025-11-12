@@ -35,17 +35,15 @@ public class FileSystemService : IFileSystemService
             // This is more reliable for detecting ongoing copy operations
             var fileInfo = new FileInfo(eventArgsPath);
             var initialSize = fileInfo.Length;
-            var lastModified = fileInfo.LastWriteTimeUtc;
             
             // Wait a bit
-            Thread.Sleep(200);
+            Thread.Sleep(800);
             
             fileInfo.Refresh();
             var currentSize = fileInfo.Length;
-            var currentModified = fileInfo.LastWriteTimeUtc;
             
             // If size or last modified changed, file is still being written to
-            if (initialSize != currentSize || lastModified != currentModified)
+            if (initialSize != currentSize)
             {
                 return true;
             }

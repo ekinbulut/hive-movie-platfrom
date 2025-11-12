@@ -58,4 +58,13 @@ public class TitleParserTests
         Assert.Equal(expected, result);
     }
 
+    
+    [Fact]
+    public void ExtractTitle_ReturnsCorrectTitle_ForInputWithMultipleSpacesFlux()
+    {
+        var input = "The Return 2024 1080p AMZN WEB-DL DDP5 1 H 264-FLUX.mkv";
+        var expected = "The Return";
+        var result = TitleParser.ExtractTitle(input);
+        Assert.Equal(expected, result);
+    }
 }
