@@ -1,4 +1,5 @@
-﻿using base_transport;
+﻿using System.Diagnostics;
+using base_transport;
 using Domain.Events;
 using Domain.Interfaces;
 using Infrastructure.Database.Extensions;
@@ -17,12 +18,18 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        string title = "MetaScraper Service";
-        Console.Title = title;
+        var cancellationTokenSource = new CancellationTokenSource();
+        var host = await App.StartAsync(args, cancellationTokenSource);
+        await App.RunInteractiveLoop(host, cancellationTokenSource);
+    }
+}
 
-        //write the app version and name
-        var appVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+static class App
+{
+    private const string Title = "MetaScraper Service";
 
+    private static Task<IHostBuilder> GetHostBuilderAsync(string[] args)
+    {
         var builder = Host.CreateDefaultBuilder(args)
             .ConfigureAppConfiguration((hostingContext, config) => { config.AddEnvironmentVariables(); })
             .ConfigureLogging(logging =>
@@ -43,34 +50,64 @@ class Program
                 services.AddTransient<ITmdbApiService, TmdbApiService>();
                 services.AddSingleton<IJellyFinServiceConfiguration, JellyFinServiceConfiguration>();
                 services.AddScoped<IJellyFinService, JellyFinService>();
-
             });
 
-        using var host = builder.Build();
+        return Task.FromResult(builder);
+    }
 
-        await host.StartAsync();
-        var cancellationTokenSource = new CancellationTokenSource();
+    public static Task<IHost> StartAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+    {
+        return GetHostBuilderAsync(args).ContinueWith(async builderTask =>
+        {
+            Console.Title = Title;
 
-        await MessageHandlerExecutor.StartHandlerAsync<FileFoundEvent>(host.Services, "file.found",
-            cancellationTokenSource.Token);
-        
+            var appVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+
+            var host = builderTask.Result.Build();
+            await host.StartAsync(cancellationTokenSource.Token);
+
+            await MessageHandlerExecutor.StartHandlerAsync<FileFoundEvent>(host.Services, "file.found",
+                cancellationTokenSource.Token);
+
+            var logger = host.Services.GetRequiredService<ILogger<Program>>();
+
+            logger.LogInformation($"{Title} v{appVersion}");
+            
+            logger.LogInformation("=== Environment Variables ===");
+
+            PrintEnvironmentVariables(logger,"RabbitMQ__HostName");
+            PrintEnvironmentVariables(logger,"JELLYFIN_BASE_URL");
+
+            static void PrintEnvironmentVariables(ILogger logger, params string[] variableNames)
+            {
+    
+                foreach (var name in variableNames)
+                {
+                    var value = Environment.GetEnvironmentVariable(name);
+                    logger.LogInformation($"{name} = {value ?? "(not set)"}");
+                }
+    
+            }
+            logger.LogInformation("============================");
+
+            return host;
+        }, cancellationTokenSource.Token).Unwrap();
+    }
+
+    public static async Task RunInteractiveLoop(IHost host, CancellationTokenSource cancellationTokenSource)
+    {
         var logger = host.Services.GetRequiredService<ILogger<Program>>();
-
-        logger.LogInformation($"{title} v{appVersion}");
-        logger.LogInformation("Press 'q' to quit or Ctrl+C to exit.");
-
 
         Console.CancelKeyPress += (sender, e) =>
         {
             e.Cancel = true;
-            logger.LogWarning("\nShutting down watcher...");
+            logger.LogWarning($"{Title} shutting down...");
             cancellationTokenSource.Cancel();
         };
 
-// Check if running in interactive mode
         if (Environment.UserInteractive && !Console.IsInputRedirected)
         {
-            // logger.LogInformation("Press 'q' to quit or Ctrl+C to exit.");
+            logger.LogInformation("Press 'q' to quit or Ctrl+C to exit.");
 
             // Run the interactive loop in a background task
             _ = Task.Run(async () =>
@@ -82,8 +119,8 @@ class Program
                         var key = Console.ReadKey(true);
                         if (key.KeyChar == 'q' || key.KeyChar == 'Q')
                         {
-                            logger.LogWarning("\nShutting down watcher...");
-                            cancellationTokenSource.Cancel();
+                            logger.LogWarning($"{Title} shutting down...");
+                            await cancellationTokenSource.CancelAsync();
                             break;
                         }
                     }
@@ -92,14 +129,13 @@ class Program
                 {
                     // Console input not available, ignore
                 }
-            });
+            }, cancellationTokenSource.Token);
         }
         else
         {
             logger.LogInformation("Running in non-interactive mode. Use Ctrl+C to exit.");
         }
 
-// Wait for cancellation
         try
         {
             await Task.Delay(Timeout.Infinite, cancellationTokenSource.Token);
@@ -109,10 +145,8 @@ class Program
             // Expected when cancellation is requested
         }
 
-        logger.LogWarning("Stopping watcher...");
-
-// Stop Rebus/Host
-
         await host.StopAsync();
+
+        logger.LogWarning($"{Title} stopped.");
     }
 }
